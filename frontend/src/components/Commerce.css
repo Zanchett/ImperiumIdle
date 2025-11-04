@@ -1,0 +1,480 @@
+.commerce-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.commerce-header {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(139, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.commerce-title {
+  font-size: 1rem;
+  color: #ff6b6b;
+  margin: 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+}
+
+.commerce-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0 0;
+}
+
+.planet-type-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(139, 0, 0, 0.3);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.planet-type-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.planet-type-tabs::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.planet-type-tabs::-webkit-scrollbar-thumb {
+  background: rgba(139, 0, 0, 0.5);
+  border-radius: 2px;
+}
+
+.tab-button {
+  padding: 0.5rem 1rem;
+  background: rgba(40, 40, 40, 0.6);
+  border: 1px solid rgba(100, 100, 100, 0.3);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.75rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tab-button:hover {
+  background: rgba(50, 50, 50, 0.8);
+  border-color: rgba(139, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tab-button.active {
+  background: rgba(139, 0, 0, 0.3);
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+}
+
+.commerce-split-screen {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.planet-list-panel {
+  width: 300px;
+  background: rgba(20, 20, 20, 0.8);
+  border: 2px solid rgba(139, 0, 0, 0.5);
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.planet-list-panel .panel-title {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(139, 0, 0, 0.3);
+}
+
+.planets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.planets-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.planets-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.planets-list::-webkit-scrollbar-thumb {
+  background: rgba(139, 0, 0, 0.5);
+  border-radius: 3px;
+}
+
+.planets-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 0, 0, 0.7);
+}
+
+.planet-list-item {
+  background: rgba(40, 40, 40, 0.6);
+  border: 1px solid rgba(100, 100, 100, 0.3);
+  border-radius: 4px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.planet-list-item:hover {
+  border-color: rgba(139, 0, 0, 0.5);
+  background: rgba(50, 50, 50, 0.8);
+  transform: translateX(3px);
+}
+
+.planet-list-item.selected {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.15);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+}
+
+.planet-list-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.planet-list-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.planet-list-info {
+  flex: 1;
+}
+
+.planet-list-name {
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  margin: 0 0 0.25rem 0;
+  font-weight: bold;
+  text-shadow: 0 0 3px rgba(255, 107, 107, 0.5);
+}
+
+.planet-list-type {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.7rem;
+  margin: 0;
+}
+
+.planet-list-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.5rem;
+  font-family: 'Courier New', monospace;
+}
+
+.rotation-info {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.trade-items-count {
+  color: #ffb347;
+  font-weight: bold;
+}
+
+.trade-panel {
+  flex: 1;
+  background: rgba(20, 20, 20, 0.8);
+  border: 2px solid rgba(139, 0, 0, 0.5);
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.trade-panel-header {
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(139, 0, 0, 0.3);
+  padding-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.trade-panel-header .panel-title {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+}
+
+.rotation-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.75rem;
+  margin: 0;
+  font-family: 'Courier New', monospace;
+}
+
+.trade-split-view {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.trade-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.trade-section-title {
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 5px rgba(255, 107, 107, 0.5);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(139, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.buy-section .trade-section-title {
+  color: #4caf50;
+}
+
+.sell-section .trade-section-title {
+  color: #ffb347;
+}
+
+.trade-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.trade-items-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.trade-items-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.trade-items-list::-webkit-scrollbar-thumb {
+  background: rgba(139, 0, 0, 0.5);
+  border-radius: 3px;
+}
+
+.trade-items-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 0, 0, 0.7);
+}
+
+.trade-item-card {
+  background: rgba(40, 40, 40, 0.5);
+  border: 1px solid rgba(139, 0, 0, 0.3);
+  border-radius: 4px;
+  padding: 0.75rem;
+  flex-shrink: 0;
+}
+
+.trade-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.trade-item-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.trade-item-info {
+  flex: 1;
+}
+
+.trade-item-name {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  margin: 0 0 0.25rem 0;
+  font-weight: bold;
+}
+
+.trade-item-price {
+  color: #ffb347;
+  font-size: 0.75rem;
+  margin: 0;
+  font-weight: bold;
+  text-shadow: 0 0 3px rgba(255, 179, 71, 0.5);
+  font-family: 'Courier New', monospace;
+}
+
+.trade-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.availability {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.7rem;
+  margin: 0;
+  font-family: 'Courier New', monospace;
+}
+
+.profit-indicator {
+  color: #4caf50;
+  font-size: 0.75rem;
+  margin: 0;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.trade-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantity-input {
+  width: 70px;
+  padding: 0.4rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(139, 0, 0, 0.3);
+  border-radius: 3px;
+  color: #ffb347;
+  font-family: 'Courier New', monospace;
+  text-align: center;
+  font-size: 0.75rem;
+}
+
+.quantity-input:focus {
+  outline: none;
+  border-color: #ff6b6b;
+  box-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
+}
+
+.trade-total {
+  flex: 1;
+  color: #ffb347;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+}
+
+.trade-button {
+  padding: 0.4rem 1rem;
+  border: 2px solid;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.buy-button {
+  background: linear-gradient(135deg, #4caf50 0%, #81c784 100%);
+  border-color: #4caf50;
+  color: white;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.4);
+}
+
+.buy-button:hover:not(.disabled) {
+  background: linear-gradient(135deg, #81c784 0%, #a5d6a7 100%);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+  transform: translateY(-2px);
+}
+
+.sell-button {
+  background: linear-gradient(135deg, #ffb347 0%, #ff9800 100%);
+  border-color: #ffb347;
+  color: white;
+  box-shadow: 0 0 15px rgba(255, 179, 71, 0.4);
+}
+
+.sell-button:hover:not(.disabled) {
+  background: linear-gradient(135deg, #ff9800 0%, #ffb347 100%);
+  box-shadow: 0 0 20px rgba(255, 179, 71, 0.6);
+  transform: translateY(-2px);
+}
+
+.trade-button.disabled {
+  background: rgba(40, 40, 40, 0.6);
+  border-color: rgba(100, 100, 100, 0.3);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.no-trade-items {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 2rem;
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.no-planet-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.no-planets-discovered {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.no-planets-discovered h2 {
+  color: #ff6b6b;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}

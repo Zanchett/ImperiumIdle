@@ -1,0 +1,37 @@
+export interface SalvagingResource {
+  id: string
+  name: string
+  levelRequired: number
+  icon?: string
+  baseTime: number // Time in seconds to gather
+  xpReward: number
+  respawnTime: number // Time in seconds before resource respawns (0 = no respawn)
+  value: number // Gold/throne gelt value
+  description: string
+}
+
+export const SALVAGING_RESOURCES: SalvagingResource[] = [
+  { id: 'scrap-metal', name: 'Scrap Metal', levelRequired: 1, baseTime: 3, xpReward: 5, respawnTime: 1, value: 0, icon: '⚙️', description: 'Corroded metal fragments from destroyed vehicles' },
+  { id: 'plasteel-shards', name: 'Plasteel Shards', levelRequired: 1, baseTime: 3, xpReward: 7, respawnTime: 5, value: 198, icon: '🔩', description: 'Small fragments of Imperial armor plating' },
+  { id: 'broken-glass', name: 'Broken Glass', levelRequired: 1, baseTime: 3, xpReward: 7, respawnTime: 5, value: 198, icon: '🪟', description: 'Shattered transparisteel from ruined structures' },
+  { id: 'promethium-cells', name: 'Promethium Cells', levelRequired: 15, baseTime: 3, xpReward: 14, respawnTime: 10, value: 495, icon: '🔋', description: 'Partially drained fuel cells from Imperial equipment' },
+  { id: 'ceramite-plates', name: 'Ceramite Plates', levelRequired: 30, baseTime: 3, xpReward: 18, respawnTime: 10, value: 1287, icon: '🛡️', description: 'Damaged armor plating from Astartes equipment' },
+  { id: 'servo-skulls', name: 'Servo Skulls', levelRequired: 30, baseTime: 3, xpReward: 25, respawnTime: 15, value: 2475, icon: '💀', description: 'Deactivated servo-skull units for parts' },
+  { id: 'adamantium-ore', name: 'Adamantium Ore', levelRequired: 40, baseTime: 3, xpReward: 28, respawnTime: 15, value: 2970, icon: '💎', description: 'Raw adamantium extracted from fortress ruins' },
+  { id: 'power-conduits', name: 'Power Conduits', levelRequired: 40, baseTime: 3, xpReward: 28, respawnTime: 120, value: 9900, icon: '⚡', description: 'Salvaged energy transmission components' },
+  { id: 'machine-spirits', name: 'Machine Spirits', levelRequired: 50, baseTime: 3, xpReward: 65, respawnTime: 20, value: 6435, icon: '🤖', description: 'Salvaged cogitator cores with intact data' },
+  { id: 'vox-units', name: 'Vox Units', levelRequired: 70, baseTime: 3, xpReward: 71, respawnTime: 30, value: 8712, icon: '📻', description: 'Communication equipment from fallen guardsmen' },
+  { id: 'auspex-scanners', name: 'Auspex Scanners', levelRequired: 80, baseTime: 3, xpReward: 86, respawnTime: 60, value: 9900, icon: '📡', description: 'Advanced detection equipment' },
+  { id: 'plasma-coils', name: 'Plasma Coils', levelRequired: 85, baseTime: 3, xpReward: 95, respawnTime: 240, value: 74250, icon: '🌀', description: 'Dangerous but valuable plasma weapon components' },
+  { id: 'psyker-crystals', name: 'Psyker Crystals', levelRequired: 270, baseTime: 3, xpReward: 101, respawnTime: 120, value: 13350, icon: '🔮', description: 'Crystallized psychic energy from battlefield sites' },
+  { id: 'archeotech-fragments', name: 'Archeotech Fragments', levelRequired: 100, baseTime: 3, xpReward: 30, respawnTime: 130, value: 297, icon: '⚛️', description: 'Ancient technology from the Dark Age' },
+  { id: 'gene-seed', name: 'Gene-Seed', levelRequired: 100, baseTime: 3, xpReward: 112, respawnTime: 130, value: 18312, icon: '🧬', description: 'Sacred Astartes genetic material' },
+  { id: 'warp-cores', name: 'Warp Cores', levelRequired: 100, baseTime: 3, xpReward: 265, respawnTime: 0, value: 297000, icon: '🌌', description: 'Contained warp energy sources' },
+  { id: 'emperor-relics', name: 'Emperor Relics', levelRequired: 102, baseTime: 3, xpReward: 92, respawnTime: 140, value: 23760, icon: '👑', description: 'Sacred artifacts blessed by the Emperor' },
+  { id: 'primarch-essence', name: 'Primarch Essence', levelRequired: 105, baseTime: 3, xpReward: 96, respawnTime: 150, value: 29205, icon: '⭐', description: 'Traces of Primarch genetic material' },
+  { id: 'chaos-artifacts', name: 'Chaos Artifacts', levelRequired: 108, baseTime: 3, xpReward: 119, respawnTime: 160, value: 39600, icon: '😈', description: 'Dangerous but powerful corrupted relics' },
+  { id: 'necron-technology', name: 'Necron Technology', levelRequired: 110, baseTime: 3, xpReward: 385, respawnTime: 0, value: 445500, icon: '🤖', description: 'Ancient xenos technology of immense power' },
+  { id: 'eldar-spirit-stones', name: 'Eldar Spirit Stones', levelRequired: 112, baseTime: 3, xpReward: 330, respawnTime: 0, value: 74250, icon: '💎', description: 'Psychically active xenos soul containers' },
+  { id: 'tyranid-biomass', name: 'Tyranid Biomass', levelRequired: 115, baseTime: 3, xpReward: 138, respawnTime: 180, value: 56925, icon: '🦠', description: 'Adaptive alien biological material' },
+  { id: 'void-shards', name: 'Void Shards', levelRequired: 118, baseTime: 3, xpReward: 510, respawnTime: 0, value: 643500, icon: '🕳️', description: 'Fragments of reality itself from the Warp' },
+]

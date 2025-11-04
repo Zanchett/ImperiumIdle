@@ -1,0 +1,276 @@
+/* CHEAT MENU - REMOVE THIS FILE BEFORE PRODUCTION */
+
+.cheat-menu-toggle {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 0, 0, 0.7);
+  border: 2px solid #ff0000;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.cheat-menu-toggle:hover {
+  background: rgba(255, 0, 0, 0.9);
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.cheat-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.cheat-menu {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 3px solid #ff0000;
+  border-radius: 12px;
+  max-width: 600px;
+  max-height: 80vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+}
+
+.cheat-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid rgba(255, 0, 0, 0.3);
+  background: rgba(255, 0, 0, 0.1);
+}
+
+.cheat-menu-header h2 {
+  margin: 0;
+  color: #ff0000;
+  font-size: 1.5rem;
+  text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.cheat-menu-close {
+  background: rgba(255, 0, 0, 0.3);
+  border: 1px solid #ff0000;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  color: #ff0000;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.cheat-menu-close:hover {
+  background: rgba(255, 0, 0, 0.5);
+  transform: rotate(90deg);
+}
+
+.cheat-menu-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.cheat-section {
+  margin-bottom: 2rem;
+}
+
+.cheat-section h3 {
+  color: #ffd700;
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+  padding-bottom: 0.5rem;
+}
+
+.cheat-current {
+  color: #b0b0b0;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.cheat-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cheat-buttons button,
+.cheat-skill-buttons button,
+.cheat-resource-item button {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.cheat-buttons button:hover,
+.cheat-skill-buttons button:hover,
+.cheat-resource-item button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.cheat-skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cheat-skill-item {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 6px;
+  padding: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cheat-skill-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.cheat-skill-icon {
+  font-size: 1.5rem;
+}
+
+.cheat-skill-name {
+  color: #e0e0e0;
+  font-weight: bold;
+  flex: 1;
+}
+
+.cheat-skill-level {
+  color: #ffd700;
+  font-size: 0.9rem;
+}
+
+.cheat-skill-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cheat-resources {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cheat-resource-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.cheat-subsection {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cheat-subsection h4 {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.5rem;
+}
+
+.cheat-buildings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cheat-building-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.cheat-resource-item span {
+  color: #e0e0e0;
+}
+
+.cheat-warning {
+  text-align: center;
+  color: #ff0000;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid #ff0000;
+  border-radius: 6px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Scrollbar styling */
+.cheat-menu-content::-webkit-scrollbar,
+.cheat-skills-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cheat-menu-content::-webkit-scrollbar-track,
+.cheat-skills-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.cheat-menu-content::-webkit-scrollbar-thumb,
+.cheat-skills-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.cheat-menu-content::-webkit-scrollbar-thumb:hover,
+.cheat-skills-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 0, 0, 0.5);
+}
+

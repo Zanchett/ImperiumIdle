@@ -1,0 +1,197 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.app.dataslate {
+  min-height: 100vh;
+  background: #000000;
+  color: #cccccc;
+  font-family: 'Courier New', monospace;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Dataslate scanline effect */
+.app.dataslate::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 1000;
+  animation: scanlines 8s linear infinite;
+}
+
+@keyframes scanlines {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(4px);
+  }
+}
+
+/* Terminal flicker effect */
+.app.dataslate::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    rgba(139, 0, 0, 0.02) 100%
+  );
+  pointer-events: none;
+  z-index: 999;
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.98;
+  }
+}
+
+.app-layout {
+  display: flex;
+  height: calc(100vh - 70px);
+  margin-top: 70px;
+  position: relative;
+  z-index: 1;
+}
+
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+}
+
+.loading-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: #ff6b6b;
+  font-size: 1.2rem;
+  letter-spacing: 3px;
+  font-family: 'Courier New', monospace;
+}
+
+.loading-icon {
+  font-size: 3rem;
+  animation: pulse 2s infinite;
+}
+
+/* Connection overlay */
+.connection-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  border: 3px solid #8b0000;
+}
+
+.connection-message {
+  text-align: center;
+  padding: 3rem;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #8b0000;
+  box-shadow: 
+    0 0 50px rgba(139, 0, 0, 0.5),
+    inset 0 0 50px rgba(139, 0, 0, 0.2);
+}
+
+.connection-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  color: #ff6b6b;
+  animation: pulse 2s infinite;
+}
+
+.connection-message h2 {
+  font-size: 1.5rem;
+  color: #ff6b6b;
+  margin-bottom: 1rem;
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
+}
+
+.connection-message p {
+  font-size: 1rem;
+  color: #cccccc;
+  margin-bottom: 1.5rem;
+}
+
+.connection-status {
+  font-size: 0.9rem;
+  color: #888888;
+}
+
+.status-offline {
+  color: #ff6b6b;
+  font-weight: bold;
+  margin-left: 0.5rem;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+/* Global scrollbar styling */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(139, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 0, 0, 0.6);
+  border: 1px solid rgba(139, 0, 0, 0.8);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 0, 0, 0.9);
+}
+
+/* Selection styling */
+::selection {
+  background: rgba(139, 0, 0, 0.5);
+  color: #ffffff;
+}

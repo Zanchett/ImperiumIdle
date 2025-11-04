@@ -1,0 +1,201 @@
+.dataslate-header {
+  height: 70px;
+  background: linear-gradient(135deg, #0a0000 0%, #1a0000 50%, #0a0000 100%);
+  border-bottom: 3px solid #8b0000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(139, 0, 0, 0.3);
+  font-family: 'Courier New', monospace;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.dataslate-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(139, 0, 0, 0.03) 2px,
+    rgba(139, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.logo-text {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ff6b6b;
+  text-shadow: 
+    0 0 10px rgba(255, 107, 107, 0.8),
+    0 0 20px rgba(255, 107, 107, 0.4),
+    2px 2px 4px rgba(0, 0, 0, 1);
+  letter-spacing: 4px;
+  line-height: 1;
+}
+
+.logo-subtitle {
+  font-size: 0.65rem;
+  color: #cc0000;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.header-center {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-resources {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.header-resource-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-resource-icon {
+  font-size: 1.2rem;
+}
+
+.header-resource-label {
+  font-size: 0.75rem;
+  color: #888888;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.header-resource-value {
+  font-size: 1rem;
+  color: #ffd700;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.inventory-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(139, 0, 0, 0.5);
+  border-radius: 4px;
+  color: #ff6b6b;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.inventory-button:hover {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(139, 0, 0, 0.8);
+  color: #ff8e8e;
+}
+
+.inventory-icon {
+  font-size: 1.1rem;
+}
+
+.inventory-label {
+  font-weight: bold;
+}
+
+.inventory-count {
+  background: rgba(139, 0, 0, 0.5);
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.header-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(139, 0, 0, 0.5);
+  border-radius: 4px;
+}
+
+.logout-button {
+  background: transparent;
+  border: 1px solid rgba(139, 0, 0, 0.5);
+  color: #ff6b6b;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+  border-radius: 2px;
+  font-family: 'Courier New', monospace;
+}
+
+.logout-button:hover {
+  background: rgba(139, 0, 0, 0.3);
+  border-color: rgba(139, 0, 0, 0.8);
+  color: #ff8e8e;
+  transform: scale(1.1);
+}
+
+.player-name {
+  font-size: 0.9rem;
+  color: #ff6b6b;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.status-indicator {
+  color: #00ff00;
+  font-size: 0.8rem;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
