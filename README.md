@@ -53,7 +53,7 @@ An idle game similar to Melvor Idle, with multiplayer features including base in
 
 ### 1. Clone/Navigate to Project Directory
 ```powershell
-cd C:\Users\gabri\Projects\ImperiumIdle
+cd C:\...\ImperiumIdle
 ```
 
 ### 2. Install Dependencies

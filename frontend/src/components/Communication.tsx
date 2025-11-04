@@ -32,6 +32,9 @@ export default function Communication({ skillId }: CommunicationProps) {
   const [selectedPlanetType, setSelectedPlanetType] = useState<PlanetType | null>(null)
   const [availablePlanets, setAvailablePlanets] = useState<Planet[]>([])
 
+  // Rotation interval: 2 minutes (120000ms) - constant for both rotation and timer
+  const ROTATION_INTERVAL = 120000
+
   // Update time for progress bars
   useEffect(() => {
     const interval = setInterval(() => {
@@ -48,11 +51,8 @@ export default function Communication({ skillId }: CommunicationProps) {
     const maxPlanets = Math.min(basePlanets + 1, 6)
     const numPlanets = Math.max(1, Math.min(maxPlanets, Math.floor(skillLevel / 5) + 1))
     
-    // Rotation interval: 2 minutes (120000ms)
-    const rotationInterval = 120000
-    
     // Calculate rotation index based on current time
-    const rotationIndex = Math.floor((currentTime / rotationInterval) % planets.length)
+    const rotationIndex = Math.floor((currentTime / ROTATION_INTERVAL) % planets.length)
     
     // Get available planets (rotate through all planets)
     const shuffled = [...planets].sort((a, b) => a.id.localeCompare(b.id))
@@ -127,11 +127,19 @@ export default function Communication({ skillId }: CommunicationProps) {
     ? availablePlanets.filter((p) => p.type === selectedPlanetType)
     : availablePlanets
 
+  // Calculate rotation timer
+  const nextRotationTime = Math.ceil(currentTime / ROTATION_INTERVAL) * ROTATION_INTERVAL
+  const timeUntilRotation = Math.max(0, nextRotationTime - currentTime)
+
   return (
     <div className="communication-container">
       <div className="communication-header">
         <h1 className="communication-title">📡 Communication Array</h1>
         <p className="communication-subtitle">Establish contact with distant worlds across the galaxy</p>
+        <div className="rotation-timer">
+          <span className="rotation-timer-label">Next Rotation:</span>
+          <span className="rotation-timer-value">{formatTime(timeUntilRotation)}</span>
+        </div>
       </div>
 
       {/* Planet Type Filter */}

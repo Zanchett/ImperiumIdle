@@ -38,8 +38,8 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     equipmentStats: {
       attackType: 'stab',
       attackScale: 1.5,
-      damage: 3,
-      hitChance: 2,
+      damage: 20,
+      accuracy: 2,
       critChance: 3,
     },
   },
@@ -78,8 +78,8 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     equipmentStats: {
       attackType: 'cut',
       attackScale: 1.5,
-      damage: 5,
-      hitChance: 3,
+      damage: 25,
+      accuracy: 3,
       critChance: 4,
     },
   },
@@ -112,8 +112,8 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     equipmentStats: {
       attackType: 'cut',
       attackScale: 1.5,
-      damage: 6,
-      hitChance: 4,
+      damage: 30,
+      accuracy: 4,
       critChance: 5,
     },
   },
@@ -146,8 +146,8 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     equipmentStats: {
       attackType: 'bash',
       attackScale: 1.5,
-      damage: 8,
-      hitChance: 2,
+      damage: 35,
+      accuracy: 2,
       critChance: 3,
     },
   },
@@ -207,8 +207,8 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     equipmentStats: {
       attackType: 'cut',
       attackScale: 1.5,
-      damage: 10,
-      hitChance: 5,
+      damage: 40,
+      accuracy: 5,
       critChance: 6,
     },
   },
@@ -281,8 +281,8 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     equipmentStats: {
       attackType: 'stab',
       attackScale: 1.5,
-      damage: 5,
-      hitChance: 3,
+      damage: 45,
+      accuracy: 3,
       critChance: 4,
     },
   },
@@ -318,6 +318,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-2', amount: 1 }],
     time: 5,
     value: 792,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 50,
+      accuracy: 3,
+      critChance: 4,
+    },
   },
   {
     id: 'placeholder-arrowtips-2',
@@ -351,6 +358,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-2', amount: 2 }],
     time: 6,
     value: 1584,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 55,
+      accuracy: 4,
+      critChance: 5,
+    },
   },
   {
     id: 'placeholder-helmet-2',
@@ -373,6 +387,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-2', amount: 3 }],
     time: 8,
     value: 2079,
+    equipmentStats: {
+      attackType: 'bash',
+      attackScale: 1.5,
+      damage: 60,
+      accuracy: 2,
+      critChance: 3,
+    },
   },
   {
     id: 'placeholder-javelin-heads-2',
@@ -417,6 +438,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-2', amount: 3 }],
     time: 10,
     value: 2079,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 65,
+      accuracy: 5,
+      critChance: 6,
+    },
   },
   {
     id: 'placeholder-crossbow-head-2',
@@ -477,8 +505,8 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     equipmentStats: {
       attackType: 'stab',
       attackScale: 1.5,
-      damage: 7,
-      hitChance: 4,
+      damage: 70,
+      accuracy: 4,
       critChance: 5,
     },
   },
@@ -503,6 +531,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-3', amount: 1 }],
     time: 6,
     value: 990,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 75,
+      accuracy: 3,
+      critChance: 4,
+    },
   },
   {
     id: 'placeholder-arrowtips-3',
@@ -536,6 +571,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-3', amount: 2 }],
     time: 7,
     value: 1584,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 80,
+      accuracy: 4,
+      critChance: 5,
+    },
   },
   {
     id: 'placeholder-helmet-3',
@@ -558,6 +600,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-3', amount: 3 }],
     time: 9,
     value: 2475,
+    equipmentStats: {
+      attackType: 'bash',
+      attackScale: 1.5,
+      damage: 85,
+      accuracy: 2,
+      critChance: 3,
+    },
   },
   {
     id: 'placeholder-javelin-heads-3',
@@ -602,6 +651,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-3', amount: 3 }],
     time: 11,
     value: 2475,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 90,
+      accuracy: 5,
+      critChance: 6,
+    },
   },
   {
     id: 'placeholder-crossbow-head-3',
@@ -662,8 +718,8 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     equipmentStats: {
       attackType: 'stab',
       attackScale: 1.5,
-      damage: 10,
-      hitChance: 5,
+      damage: 80,
+      accuracy: 5,
       critChance: 6,
     },
   },
@@ -688,6 +744,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-4', amount: 1 }],
     time: 7,
     value: 5940,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 100,
+      accuracy: 3,
+      critChance: 4,
+    },
   },
   {
     id: 'placeholder-arrowtips-4',
@@ -721,6 +784,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-4', amount: 2 }],
     time: 8,
     value: 11880,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 105,
+      accuracy: 4,
+      critChance: 5,
+    },
   },
   {
     id: 'placeholder-helmet-4',
@@ -743,6 +813,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-4', amount: 3 }],
     time: 10,
     value: 17820,
+    equipmentStats: {
+      attackType: 'bash',
+      attackScale: 1.5,
+      damage: 110,
+      accuracy: 2,
+      critChance: 3,
+    },
   },
   {
     id: 'placeholder-javelin-heads-4',
@@ -787,6 +864,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-4', amount: 3 }],
     time: 12,
     value: 17820,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 115,
+      accuracy: 5,
+      critChance: 6,
+    },
   },
   {
     id: 'placeholder-crossbow-head-4',
@@ -847,8 +931,8 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     equipmentStats: {
       attackType: 'stab',
       attackScale: 1.5,
-      damage: 13,
-      hitChance: 6,
+      damage: 95,
+      accuracy: 6,
       critChance: 7,
     },
   },
@@ -873,6 +957,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-5', amount: 1 }],
     time: 8,
     value: 7920,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 120,
+      accuracy: 3,
+      critChance: 4,
+    },
   },
   {
     id: 'placeholder-arrowtips-5',
@@ -906,6 +997,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-5', amount: 2 }],
     time: 9,
     value: 14850,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 125,
+      accuracy: 4,
+      critChance: 5,
+    },
   },
   {
     id: 'placeholder-helmet-5',
@@ -928,6 +1026,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-5', amount: 3 }],
     time: 11,
     value: 23760,
+    equipmentStats: {
+      attackType: 'bash',
+      attackScale: 1.5,
+      damage: 130,
+      accuracy: 2,
+      critChance: 3,
+    },
   },
   {
     id: 'placeholder-javelin-heads-5',
@@ -972,6 +1077,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-5', amount: 3 }],
     time: 13,
     value: 23760,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 135,
+      accuracy: 5,
+      critChance: 6,
+    },
   },
   {
     id: 'placeholder-crossbow-head-5',
@@ -1032,8 +1144,8 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     equipmentStats: {
       attackType: 'stab',
       attackScale: 1.5,
-      damage: 16,
-      hitChance: 7,
+      damage: 110,
+      accuracy: 7,
       critChance: 8,
     },
   },
@@ -1058,6 +1170,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-6', amount: 1 }],
     time: 9,
     value: 74250,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 140,
+      accuracy: 3,
+      critChance: 4,
+    },
   },
   {
     id: 'placeholder-arrowtips-6',
@@ -1091,6 +1210,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-6', amount: 2 }],
     time: 10,
     value: 23760,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 145,
+      accuracy: 4,
+      critChance: 5,
+    },
   },
   {
     id: 'placeholder-helmet-6',
@@ -1113,6 +1239,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-6', amount: 3 }],
     time: 12,
     value: 39600,
+    equipmentStats: {
+      attackType: 'bash',
+      attackScale: 1.5,
+      damage: 150,
+      accuracy: 2,
+      critChance: 3,
+    },
   },
   {
     id: 'placeholder-javelin-heads-6',
@@ -1157,6 +1290,13 @@ export const ENGINEERING_RECIPES: EngineeringRecipe[] = [
     ingredients: [{ resourceId: 'placeholder-metal-6', amount: 3 }],
     time: 14,
     value: 39600,
+    equipmentStats: {
+      attackType: 'cut',
+      attackScale: 1.5,
+      damage: 155,
+      accuracy: 5,
+      critChance: 6,
+    },
   },
   {
     id: 'placeholder-crossbow-head-6',
