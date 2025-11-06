@@ -41,6 +41,24 @@ const EQUIPMENT_TYPE_MAP: Record<string, string[]> = {
   'food': ['food', 'ration', 'meal', 'provision'], // Food items slot
 }
 
+// Equipment slot placeholder images - each slot has its own image path for easy swapping
+const EQUIPMENT_SLOT_IMAGES: Record<string, string> = {
+  '0-0': '/images/equipment/amulet_equip.png', // Necklace
+  '0-1': '/images/equipment/helmet_equip.png', // Helmet
+  '0-2': '/images/equipment/cape_equip.png', // Cape
+  '1-0': '/images/equipment/gun_equip.png', // Weapon
+  '1-1': '/images/equipment/armor_equip.png', // Armor
+  '1-2': '/images/equipment/shield_equip.png', // Shield
+  '2-0': '/images/equipment/gloves_equip.png', // Gloves
+  '2-1': '/images/equipment/pants_equip.png', // Pants
+  '2-2': '/images/equipment/ring_equip.png', // Ring
+  '3-0': '/images/equipment/chant_equip.png', // Book/Chant
+  '3-1': '/images/equipment/shoes_equip.png', // Boots
+  '3-2': '/images/equipment/augment_equip.png', // Bible/Augment
+  'medical': '/images/equipment/medic_equip.png', // Medical consumable
+  'food': '/images/equipment/food_equip.png', // Food consumable
+}
+
 export default function CombatDashboard({ skillId, selectedEnemy, combatActive, onCombatStop }: CombatDashboardProps) {
   const { addGold, addXP, resources, combatSubStats, addCombatSubStatXP, removeXP, removeCombatSubStatXP, skillCategories } = useGameStore()
   const [combatLog, setCombatLog] = useState<CombatMessage[]>([])
@@ -59,6 +77,7 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
   const [deathXPLoss, setDeathXPLoss] = useState({ mainSkill: 0, subSkill: 0, subSkillName: '' })
   const [searchingForEnemy, setSearchingForEnemy] = useState(false)
   const [enemyHitAnimation, setEnemyHitAnimation] = useState<string | null>(null)
+  const [floatingDamageNumbers, setFloatingDamageNumbers] = useState<Array<{ id: string; damage: number; isCrit: boolean; x: number; y: number }>>([])
   const combatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const logEndRef = useRef<HTMLDivElement>(null)
   const attackerTurnRef = useRef<'player' | 'enemy'>('player')
@@ -69,6 +88,11 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
   const isSearchingRef = useRef<boolean>(false) // Use ref to prevent race conditions
   const enemyHealthRef = useRef<number>(selectedEnemy?.maxHealth || 100) // Track enemy health synchronously
   const combatProcessingRef = useRef<boolean>(false) // Lock to prevent concurrent combat processing
+  const lastAttackIdRef = useRef<string>('') // Track last attack to prevent duplicates
+  const lastMessageRef = useRef<{ message: string; timestamp: number } | null>(null)
+  const loggedAttackIdsRef = useRef<Set<string>>(new Set()) // Track which attack IDs have already logged messages
+  const pendingMessagesRef = useRef<Array<{ id: string; message: string; type: CombatMessage['type']; timestamp: number }>>([])
+  const messageQueueTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null) // Track last message to prevent duplicates
 
   // Calculate player stats from equipped items + sub-skill bonuses
   const calculatePlayerStats = () => {
@@ -198,10 +222,10 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
     
     // Agility: increases attack speed (reduces delay between attacks)
     // Each agility level reduces attack speed by 0.5% (scaled down from 2%)
-    // Maximum cap: 3.3 seconds (3300ms)
+    // Temporary: Cap at 4.0s to test timing issues (will change back to 3.3s later)
     const baseAttackSpeed = 4000 // Base attack speed in milliseconds (4 seconds)
     const agilityReduction = (combatSubStats.agility?.level || 0) * 0.005 // 0.5% per level (scaled down)
-    const finalAttackSpeed = Math.max(3300, baseAttackSpeed * (1 - agilityReduction)) // Cap at 3.3 seconds
+    const finalAttackSpeed = Math.max(4000, baseAttackSpeed * (1 - agilityReduction)) // Temporarily cap at 4.0s for testing
     
     return {
       attack: finalDamage,
@@ -298,6 +322,12 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
     setShowDeathPopup(false)
     // Clear combat log
     setCombatLog([])
+    loggedAttackIdsRef.current.clear() // Clear logged attack IDs when combat stops
+    pendingMessagesRef.current = [] // Clear pending messages
+    if (messageQueueTimeoutRef.current) {
+      clearTimeout(messageQueueTimeoutRef.current)
+      messageQueueTimeoutRef.current = null
+    }
   }
 
   // Scroll log to bottom when new messages are added
@@ -314,6 +344,12 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
       enemyHealthRef.current = selectedEnemy.maxHealth
       setEnemyHealth(selectedEnemy.maxHealth)
       setCombatLog([])
+      loggedAttackIdsRef.current.clear() // Clear logged attack IDs when enemy changes
+      pendingMessagesRef.current = [] // Clear pending messages
+      if (messageQueueTimeoutRef.current) {
+        clearTimeout(messageQueueTimeoutRef.current)
+        messageQueueTimeoutRef.current = null
+      }
       setPlayerHealth(100) // Always reset to 100
       hasDiedRef.current = false // Reset death flag when enemy changes
       setShowDeathPopup(false) // Close death popup if open
@@ -422,22 +458,70 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
     const combatTick = () => {
       // Early exit if searching or already processing (use ref for immediate check)
       if (isSearchingRef.current || combatProcessingRef.current) {
+        console.log('[COMBAT] combatTick skipped:', {
+          isSearching: isSearchingRef.current,
+          isProcessing: combatProcessingRef.current,
+          timestamp: Date.now()
+        })
         return
       }
+      
+      console.log('[COMBAT] combatTick started:', {
+        timestamp: Date.now(),
+        isSearching: isSearchingRef.current,
+        isProcessing: combatProcessingRef.current
+      })
       
       // Determine whose turn it is BEFORE locking to prevent double attacks
       const currentTurn = attackerTurnRef.current
       
+      // Get the current attack time to create a unique identifier for this attack
+      const currentTime = Date.now()
+      
+      // Create unique attack ID based on turn and the NEW attack time (before we update it)
+      // This ensures we don't process the same attack twice
+      // Use a combination of turn, current time, and the OLD attack time to make it unique
+      let oldAttackTime: number
+      if (currentTurn === 'player') {
+        oldAttackTime = lastPlayerAttackTimeRef.current
+      } else {
+        oldAttackTime = lastEnemyAttackTimeRef.current
+      }
+      
+      // Create attack ID that includes both the old and new timestamps to ensure uniqueness
+      const attackId = `${currentTurn}-${oldAttackTime}-${currentTime}`
+      
+      console.log('[COMBAT] Attack ID generated:', {
+        attackId,
+        currentTurn,
+        oldAttackTime,
+        currentTime,
+        lastAttackId: lastAttackIdRef.current
+      })
+      
+      // Check if this exact attack is already being processed
+      if (lastAttackIdRef.current === attackId) {
+        console.log('[COMBAT] Attack ID duplicate detected, skipping:', attackId)
+        return // Already processing this attack
+      }
+      
       // Lock combat processing to prevent concurrent damage calculations
       combatProcessingRef.current = true
+      lastAttackIdRef.current = attackId // Mark this attack as processing
+      
+      console.log('[COMBAT] Attack locked:', {
+        attackId,
+        turn: currentTurn,
+        lockSet: combatProcessingRef.current
+      })
       
       // Update attack timer immediately to prevent double attacks from rapid timer ticks
       // This must happen BEFORE the async setTimeout to ensure the next tick sees the updated time
       if (currentTurn === 'player') {
-        lastPlayerAttackTimeRef.current = Date.now()
+        lastPlayerAttackTimeRef.current = currentTime
         attackerTurnRef.current = 'enemy' // Switch turn immediately
       } else if (currentTurn === 'enemy') {
-        lastEnemyAttackTimeRef.current = Date.now()
+        lastEnemyAttackTimeRef.current = currentTime
         attackerTurnRef.current = 'player' // Switch turn immediately
       }
       
@@ -451,7 +535,45 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
         // Get current state values for this tick
         // NOTE: We use enemyHealthRef as the source of truth, not currentEnemyHealth from state
         // This prevents race conditions where state is stale
+        // Store updated player health in outer scope so we can return it
+        // IMPORTANT: Don't clear attack ID until AFTER the callback completes
+        let updatedPlayerHealth = 0
+        let hasHealthBeenUpdated = false // Track if health was updated in this attack
+        let hasMessageBeenAdded = false // Track if message was added in this attack (separate from health)
+        let shouldUnlock = false
+        let shouldClearAttackId = false
+        
+        // CRITICAL: Pre-calculate damage ONCE before entering callbacks
+        // This prevents React from recalculating damage with new random values on each callback invocation
+        let preCalculatedPlayerDamage: {
+          damage: number
+          isCrit: boolean
+          attackMessage: string
+          statToTrain: 'strength' | 'attack' | 'defence' | 'agility' | null
+        } | null = null
+        
+        // CRITICAL: Track if damage was already applied for this attack
+        // This prevents React from applying the same damage multiple times when callbacks are invoked repeatedly
+        let playerDamageApplied = false
+        
+        // CRITICAL: Select enemy attack ONCE before callbacks, not inside them
+        // This prevents React from selecting different attacks on multiple callback invocations
+        let selectedEnemyAttack: { name: string; damage: number; type: string } | null = null
+        if (currentTurn === 'enemy' && currentEnemy) {
+          selectedEnemyAttack = currentEnemy.attacks[Math.floor(Math.random() * currentEnemy.attacks.length)]
+          console.log('[COMBAT] Enemy attack selected BEFORE callback:', {
+            attackName: selectedEnemyAttack.name,
+            attackType: selectedEnemyAttack.type,
+            attackId: lastAttackIdRef.current
+          })
+        }
+        
         setPlayerHealth((currentPlayerHealth) => {
+          // Only initialize if health hasn't been updated yet
+          // This prevents overwriting the updated value if React calls the callback multiple times
+          if (!hasHealthBeenUpdated) {
+            updatedPlayerHealth = currentPlayerHealth // Initialize with current value
+          }
           setEnemyHealth((currentEnemyHealth) => {
           // Use ref as source of truth - don't sync with potentially stale state
           // The ref is updated immediately when health changes, state is async
@@ -462,6 +584,7 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
             // Check if death has already been handled
             if (hasDiedRef.current) {
               combatProcessingRef.current = false // Unlock
+              lastAttackIdRef.current = '' // Clear attack ID
               return actualEnemyHealth // Already handled, don't process again
             }
             
@@ -528,6 +651,7 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
             setShowDeathPopup(true)
             
             combatProcessingRef.current = false // Unlock
+            lastAttackIdRef.current = '' // Clear attack ID
             return currentEnemy.maxHealth
           }
 
@@ -539,16 +663,20 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
             // If searching, don't process combat yet
             if (isSearchingRef.current || searchingForEnemy) {
               combatProcessingRef.current = false // Unlock
+              lastAttackIdRef.current = '' // Clear attack ID
               return actualEnemyHealth
             }
             // Enemy defeated (fallback check - should not happen normally)
-            addMessage(`You defeated ${currentEnemy.name}!`, 'info')
+            // Use unique attack IDs for victory messages to prevent deduplication
+            const victoryAttackIdFallback = `${lastAttackIdRef.current}-victory-fallback`
+            addMessage(`You defeated ${currentEnemy.name}!`, 'info', victoryAttackIdFallback)
             // Queue store updates instead of calling directly
             storeUpdates.push(() => {
               addXP(skillId, currentEnemy.xpReward)
               addGold(currentEnemy.goldReward)
             })
-            addMessage(`Gained ${currentEnemy.xpReward} XP and ${currentEnemy.goldReward} gold`, 'info')
+            const rewardAttackIdFallback = `${lastAttackIdRef.current}-reward-fallback`
+            addMessage(`Gained ${currentEnemy.xpReward} XP and ${currentEnemy.goldReward} gold`, 'info', rewardAttackIdFallback)
             
             // Start searching for new enemy
             isSearchingRef.current = true
@@ -573,203 +701,386 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
             // Keep locked for now - will be unlocked when search completes
             // But for fallback case, unlock immediately since we're not in normal flow
             combatProcessingRef.current = false
+            lastAttackIdRef.current = '' // Clear attack ID
             return 0
           }
 
           // Combat continues
           // Use the turn we captured at the start of combatTick to prevent race conditions
           if (currentTurn === 'player') {
-            // Recalculate stats for this tick
-            const currentStats = calculatePlayerStats()
-            
-            // Player attacks - determine attack type
-            let attackMessage = ''
-            let statToTrain: 'strength' | 'attack' | 'defence' | 'agility' | null = null
-            
-            if (selectedAttackType === 'bash') {
-              // Bash trains Strength
-              statToTrain = 'strength'
-              attackMessage = 'You bash'
-            } else if (selectedAttackType === 'cut') {
-              // Cut trains Attack
-              statToTrain = 'attack'
-              attackMessage = 'You cut'
-            } else if (selectedAttackType === 'stab') {
-              // Stab trains Agility
-              statToTrain = 'agility'
-              attackMessage = 'You stab'
-            } else if (selectedAttackType === 'block') {
-              // Block trains Defence (but doesn't deal damage, reduces incoming damage)
-              statToTrain = 'defence'
-              attackMessage = 'You block'
-              // Blocking reduces next enemy attack damage instead of dealing damage
-              // For block, we'll award XP based on enemy attack damage blocked (calculated later)
-              // Turn already switched at start of combatTick, just unlock
-              setLastAttackTime(Date.now())
-              combatProcessingRef.current = false // Unlock
-              return actualEnemyHealth // No damage dealt, XP will be awarded when blocking enemy attack
-            }
-            
-            // Calculate damage (bash, cut, and stab deal damage)
-            // Calculate hit chance using the formula: H = Aff × (a / d) + m
-            const hitChance = calculateHitChance(selectedAttackType, currentEnemy, currentStats.accuracy, 0)
-            
-            // If hit chance is less than 1%, all attacks miss
-            if (hitChance < 1) {
-              addMessage(`You miss ${currentEnemy.name}!`, 'player-damage')
-              // Turn already switched at start of combatTick, just unlock
-              setLastAttackTime(Date.now())
-              combatProcessingRef.current = false // Unlock
-              return actualEnemyHealth
-            }
-            
-            // Calculate damage using new formula system
-            const strengthLevel = combatSubStats?.strength?.level || 0
-            const weapon = currentStats.equippedWeapon
-            const weaponDamage = weapon?.equipmentStats?.damage ?? 0
-            const weaponPreferredType = weapon?.equipmentStats?.attackType
-            
-            // Get medical and chant bonuses (placeholders for now)
-            // TODO: Implement medical items and chants system
-            const medicalBonus = 0 // Placeholder: will be from equipped medical items
-            const chantBonus = 1.0 // Placeholder: will be from equipped chants
-            
-            // Calculate base damage, max hit, and min hit using new formulas
-            const damageCalculation = calculateMeleeDamage(
-              strengthLevel,
-              weaponDamage,
-              selectedAttackType,
-              weaponPreferredType,
-              medicalBonus,
-              chantBonus,
-              1.0, // specialBonus - no special attacks for now
-              0, // minHitPercentageModifier - from equipment/meds/chants (not implemented yet)
-              0  // minHitFlatModifier - from equipment/meds/chants (not implemented yet)
-            )
-            
-            // Roll damage between min and max hit (pre-modifier roll)
-            const rolledDamage = rollDamage(damageCalculation.minHit, damageCalculation.maxHit)
-            
-            // Post-roll modifiers (Melvor structure: apply after damage roll)
-            // Check for crit
-            const isCrit = Math.random() * 100 < currentStats.critChance
-            const critMultiplier = isCrit ? (currentStats.critDamage / 100) : 1.0
-            
-            // Scale damage by hit chance (1-100% scales damage, <1% = miss)
-            // Hit chance acts as damage potential multiplier (post-roll modifier)
-            const damagePotential = hitChance / 100
-            
-            // Apply post-roll modifiers: rolledDamage × critMultiplier × hitChance
-            const modifiedDamage = Math.floor(rolledDamage * critMultiplier * damagePotential)
-            
-            // Enemy damage reduction (post-roll modifier)
-            const defenseMultiplier = currentEnemy.takesDamage.find(d => d.from === 'physical')?.multiplier || 1.0
-            const finalDamage = Math.floor(modifiedDamage * defenseMultiplier)
-            
-            // Award XP: 0.4 XP per point of damage dealt to the selected attack style
-            if (statToTrain && finalDamage > 0) {
-              const xpToAward = Math.floor(finalDamage * 0.4)
-              // Queue store update instead of calling directly
-              storeUpdates.push(() => addCombatSubStatXP(statToTrain, xpToAward))
-            }
-            
-            // Trigger hit animation based on attack type
-            if (finalDamage > 0) {
-              const animationType = selectedAttackType === 'bash' ? 'hit-bash'
-                : selectedAttackType === 'cut' ? 'hit-slash'
-                : selectedAttackType === 'stab' ? 'hit-stab'
-                : null
+            // CRITICAL: Only calculate damage ONCE if not already calculated
+            // This prevents React from recalculating damage with new random values on each callback invocation
+            if (!preCalculatedPlayerDamage) {
+              // Recalculate stats for this tick
+              const currentStats = calculatePlayerStats()
               
-              if (animationType) {
-                setEnemyHitAnimation(animationType)
-                // Remove animation class after animation completes (400ms)
-                setTimeout(() => setEnemyHitAnimation(null), 400)
+              // Player attacks - determine attack type
+              let attackMessage = ''
+              let statToTrain: 'strength' | 'attack' | 'defence' | 'agility' | null = null
+              
+              if (selectedAttackType === 'bash') {
+                // Bash trains Strength
+                statToTrain = 'strength'
+                attackMessage = 'You bash'
+              } else if (selectedAttackType === 'cut') {
+                // Cut trains Attack
+                statToTrain = 'attack'
+                attackMessage = 'You cut'
+              } else if (selectedAttackType === 'stab') {
+                // Stab trains Agility
+                statToTrain = 'agility'
+                attackMessage = 'You stab'
+              } else if (selectedAttackType === 'block') {
+                // Block trains Defence (but doesn't deal damage, reduces incoming damage)
+                statToTrain = 'defence'
+                attackMessage = 'You block'
+                // Blocking reduces next enemy attack damage instead of dealing damage
+                // For block, we'll award XP based on enemy attack damage blocked (calculated later)
+                // Turn already switched at start of combatTick, just unlock
+                setLastAttackTime(Date.now())
+                combatProcessingRef.current = false // Unlock
+                lastAttackIdRef.current = '' // Clear attack ID
+                return actualEnemyHealth // No damage dealt, XP will be awarded when blocking enemy attack
               }
+              
+              // Calculate damage (bash, cut, and stab deal damage)
+              // Calculate hit chance using the formula: H = Aff × (a / d) + m
+              const hitChance = calculateHitChance(selectedAttackType, currentEnemy, currentStats.accuracy, 0)
+              
+              // If hit chance is less than 1%, all attacks miss
+              if (hitChance < 1) {
+                addMessage(`You miss ${currentEnemy.name}!`, 'player-damage', lastAttackIdRef.current)
+                // Turn already switched at start of combatTick, just unlock
+                setLastAttackTime(Date.now())
+                combatProcessingRef.current = false // Unlock
+                lastAttackIdRef.current = '' // Clear attack ID
+                return actualEnemyHealth
+              }
+              
+              // Calculate damage using new formula system
+              const strengthLevel = combatSubStats?.strength?.level || 0
+              const weapon = currentStats.equippedWeapon
+              const weaponDamage = weapon?.equipmentStats?.damage ?? 0
+              const weaponPreferredType = weapon?.equipmentStats?.attackType
+              
+              // Get medical and chant bonuses (placeholders for now)
+              // TODO: Implement medical items and chants system
+              const medicalBonus = 0 // Placeholder: will be from equipped medical items
+              const chantBonus = 1.0 // Placeholder: will be from equipped chants
+              
+              // Calculate base damage, max hit, and min hit using new formulas
+              const damageCalculation = calculateMeleeDamage(
+                strengthLevel,
+                weaponDamage,
+                selectedAttackType,
+                weaponPreferredType,
+                medicalBonus,
+                chantBonus,
+                1.0, // specialBonus - no special attacks for now
+                0, // minHitPercentageModifier - from equipment/meds/chants (not implemented yet)
+                0  // minHitFlatModifier - from equipment/meds/chants (not implemented yet)
+              )
+              
+              // Roll damage between min and max hit (pre-modifier roll)
+              // CRITICAL: This roll happens ONCE, not on every callback invocation
+              const rolledDamage = rollDamage(damageCalculation.minHit, damageCalculation.maxHit)
+              
+              // Post-roll modifiers (Melvor structure: apply after damage roll)
+              // Check for crit - also happens ONCE
+              const isCrit = Math.random() * 100 < currentStats.critChance
+              const critMultiplier = isCrit ? (currentStats.critDamage / 100) : 1.0
+              
+              // Scale damage by hit chance (1-100% scales damage, <1% = miss)
+              // Hit chance acts as damage potential multiplier (post-roll modifier)
+              const damagePotential = hitChance / 100
+              
+              // Apply post-roll modifiers: rolledDamage × critMultiplier × hitChance
+              const modifiedDamage = Math.floor(rolledDamage * critMultiplier * damagePotential)
+              
+              // Enemy damage reduction (post-roll modifier)
+              const defenseMultiplier = currentEnemy.takesDamage.find(d => d.from === 'physical')?.multiplier || 1.0
+              const finalDamage = Math.floor(modifiedDamage * defenseMultiplier)
+              
+              // Store the calculated damage for reuse in subsequent callback invocations
+              preCalculatedPlayerDamage = {
+                damage: finalDamage,
+                isCrit,
+                attackMessage,
+                statToTrain
+              }
+              
+              console.log('[COMBAT] Player damage PRE-CALCULATED (once per attack):', {
+                attackId: lastAttackIdRef.current,
+                damage: finalDamage,
+                isCrit,
+                rolledDamage,
+                hitChance
+              })
             }
             
-            if (isCrit) {
-              addMessage(`${attackMessage} ${finalDamage} damage (CRITICAL!) to ${currentEnemy.name}`, 'player-damage')
-            } else {
-              addMessage(`${attackMessage} ${finalDamage} damage to ${currentEnemy.name}`, 'player-damage')
-            }
+            // Use the pre-calculated damage - same value for all callback invocations
+            const finalDamage = preCalculatedPlayerDamage.damage
+            const isCrit = preCalculatedPlayerDamage.isCrit
+            const attackMessage = preCalculatedPlayerDamage.attackMessage
+            const statToTrain = preCalculatedPlayerDamage.statToTrain
             
-            // Turn already switched at start of combatTick, just update display time
-            setLastAttackTime(Date.now())
+            // CRITICAL: Check if damage was already applied FIRST, before any other checks
+            // This prevents React from processing the same attack multiple times when callbacks are invoked repeatedly
+            if (playerDamageApplied) {
+              console.log('[COMBAT] Player attack SKIPPED - damage already applied (earliest check):', {
+                attackId: lastAttackIdRef.current,
+                currentHealth: actualEnemyHealth,
+                enemyHealthRef: enemyHealthRef.current
+              })
+              shouldUnlock = true
+              shouldClearAttackId = true
+              return enemyHealthRef.current // Return current ref value (already updated)
+            }
             
             // Early exit if enemy is already dead or we're searching for a new enemy
+            // Check BEFORE applying damage to prevent creating floating numbers for invalid attacks
             // Use the ref value we already have (actualEnemyHealth) from the beginning of the callback
             if (actualEnemyHealth <= 0 || isSearchingRef.current) {
               // Enemy already dead or searching, skip this attack
+              console.log('[COMBAT] Player attack skipped - enemy dead or searching:', {
+                enemyHealth: actualEnemyHealth,
+                isSearching: isSearchingRef.current,
+                attackId: lastAttackIdRef.current
+              })
+              shouldUnlock = true
+              shouldClearAttackId = true
               return actualEnemyHealth
+            }
+            
+            // CRITICAL: Check if damage was already applied for this attack FIRST
+            // This prevents React from applying damage multiple times when callbacks are invoked repeatedly
+            if (playerDamageApplied) {
+              console.log('[COMBAT] Player attack SKIPPED - damage already applied for this attack (early check):', {
+                attackId: lastAttackIdRef.current,
+                currentHealth: actualEnemyHealth,
+                enemyHealthRef: enemyHealthRef.current
+              })
+              shouldUnlock = true
+              shouldClearAttackId = true
+              return enemyHealthRef.current // Return current ref value
+            }
+            
+            // Re-check health ref to ensure we're still processing a valid attack
+            // Another tick might have already updated the health, so verify we're still in sync
+            const currentHealthRef = enemyHealthRef.current
+            if (currentHealthRef !== actualEnemyHealth) {
+              // Health was updated by another tick, this attack is invalid - skip it
+              // Mark as applied to prevent further processing
+              playerDamageApplied = true
+              console.log('[COMBAT] Player attack cancelled - health changed by another tick:', {
+                expectedHealth: actualEnemyHealth,
+                actualHealth: currentHealthRef,
+                attackId: lastAttackIdRef.current,
+                finalDamage
+              })
+              shouldUnlock = true
+              shouldClearAttackId = true
+              return currentHealthRef
             }
             
             // Calculate new enemy health - cap damage at current health to prevent overkill
-            // Use the ref value to ensure consistency across rapid state updates
-            const newEnemyHealth = Math.max(0, actualEnemyHealth - finalDamage)
-            
-            // Update ref immediately for synchronous tracking
-            enemyHealthRef.current = newEnemyHealth
-            
-            // Check if enemy dies (health <= 0) - stop immediately, don't allow negative health
-            if (newEnemyHealth <= 0) {
-              // Enemy defeated - award rewards
-              addMessage(`You defeated ${currentEnemy.name}!`, 'info')
-              // Queue store updates instead of calling directly
-              storeUpdates.push(() => {
-                addXP(skillId, currentEnemy.xpReward)
-                addGold(currentEnemy.goldReward)
+            // CRITICAL: Only process if enemy is still alive (actualEnemyHealth > 0)
+            // This prevents processing attacks on dead enemies
+            if (actualEnemyHealth <= 0) {
+              console.log('[COMBAT] Player attack SKIPPED - enemy already dead:', {
+                attackId: lastAttackIdRef.current,
+                actualEnemyHealth,
+                enemyHealthRef: enemyHealthRef.current
               })
-              addMessage(`Gained ${currentEnemy.xpReward} XP and ${currentEnemy.goldReward} gold`, 'info')
-              
-              // Set ref immediately to prevent race conditions
-              isSearchingRef.current = true
-              
-              // Start searching for new enemy (3 second animation period)
-              setSearchingForEnemy(true)
-              
-              // Reset and stop progress bars during search
-              setAttackSpeedProgress(0)
-              setEnemyAttackSpeedProgress(0)
-              
-              // Clear any existing search timer
-              if (searchTimerRef.current) {
-                clearTimeout(searchTimerRef.current)
-              }
-              
-              // After 3 seconds, reset enemy health to full for next spawn
-              searchTimerRef.current = setTimeout(() => {
-                isSearchingRef.current = false
-                setSearchingForEnemy(false)
-                enemyHealthRef.current = currentEnemy.maxHealth
-                setEnemyHealth(currentEnemy.maxHealth)
-                combatProcessingRef.current = false // Unlock when search completes
-                // Reset attack timers for new enemy
-                lastPlayerAttackTimeRef.current = Date.now()
-                lastEnemyAttackTimeRef.current = Date.now()
-                attackerTurnRef.current = 'player'
-                // Reset progress bars for new enemy
-                setAttackSpeedProgress(0)
-                setEnemyAttackSpeedProgress(0)
-              }, 3000)
-              
-              // Return 0 to indicate enemy is dead (will be reset after search period)
-              // Keep locked - will be unlocked when search completes
-              return 0
-            }
-            
-            // If already searching, don't process this attack
-            if (isSearchingRef.current) {
-              combatProcessingRef.current = false // Unlock
+              shouldUnlock = true
+              shouldClearAttackId = true
               return actualEnemyHealth
             }
             
-            // Unlock before returning
-            combatProcessingRef.current = false
-            return newEnemyHealth
+            // Use the ref value to ensure consistency across rapid state updates
+            const newEnemyHealth = Math.max(0, actualEnemyHealth - finalDamage)
+            
+            // CRITICAL: Only apply damage if it hasn't been applied yet for this attack
+            // React may call this callback multiple times, but we only want to apply damage once
+            if (playerDamageApplied) {
+              console.log('[COMBAT] Player attack SKIPPED - damage already applied for this attack:', {
+                attackId: lastAttackIdRef.current,
+                currentHealth: actualEnemyHealth,
+                enemyHealthRef: enemyHealthRef.current
+              })
+              shouldUnlock = true
+              shouldClearAttackId = true
+              return enemyHealthRef.current // Return current ref value
+            }
+            
+            // Atomic update: Only update if the ref still matches what we read
+            // This prevents multiple ticks from applying damage simultaneously
+            if (enemyHealthRef.current === actualEnemyHealth) {
+              // Mark damage as applied BEFORE updating health
+              // This prevents subsequent callback invocations from applying damage again
+              playerDamageApplied = true
+              
+              console.log('[COMBAT] Player attack applying damage:', {
+                attackId: lastAttackIdRef.current,
+                oldHealth: actualEnemyHealth,
+                damage: finalDamage,
+                newHealth: newEnemyHealth,
+                isCrit,
+                willDie: newEnemyHealth <= 0
+              })
+              
+              // Update ref immediately for synchronous tracking BEFORE creating visual effects
+              // This ensures the next tick sees the updated health immediately
+              enemyHealthRef.current = newEnemyHealth
+              
+              // Only create visual effects (floating numbers, animations, messages) if damage was actually applied
+              if (finalDamage > 0 && actualEnemyHealth > 0) {
+                // Award XP: 0.4 XP per point of damage dealt to the selected attack style
+                if (statToTrain) {
+                  const xpToAward = Math.floor(finalDamage * 0.4)
+                  // Queue store update instead of calling directly
+                  storeUpdates.push(() => addCombatSubStatXP(statToTrain, xpToAward))
+                }
+                
+                // Trigger hit animation based on attack type
+                const animationType = selectedAttackType === 'bash' ? 'hit-bash'
+                  : selectedAttackType === 'cut' ? 'hit-slash'
+                  : selectedAttackType === 'stab' ? 'hit-stab'
+                  : null
+                
+                if (animationType) {
+                  setEnemyHitAnimation(animationType)
+                  // Remove animation class after animation completes (400ms)
+                  setTimeout(() => setEnemyHitAnimation(null), 400)
+                }
+                
+                // Add combat log message
+                const messageText = isCrit 
+                  ? `${attackMessage} ${finalDamage} damage (CRITICAL!) to ${currentEnemy.name}`
+                  : `${attackMessage} ${finalDamage} damage to ${currentEnemy.name}`
+                
+                console.log('[COMBAT] Player adding message:', {
+                  message: messageText,
+                  attackId: lastAttackIdRef.current,
+                  damage: finalDamage
+                })
+                
+                addMessage(messageText, 'player-damage', lastAttackIdRef.current)
+                
+                // Trigger floating damage number - only create if damage is actually being applied
+                const floatingId = `damage-${Date.now()}-${Math.random()}`
+                // Calculate position relative to enemy image (center with slight random offset)
+                const x = 50 + (Math.random() - 0.5) * 20 // 50% center with ±10% random offset
+                const y = 50 + (Math.random() - 0.5) * 20 // 50% center with ±10% random offset
+                
+                setFloatingDamageNumbers(prev => [...prev, { id: floatingId, damage: finalDamage, isCrit, x, y }])
+                
+                // Remove after animation completes (1.5 seconds)
+                setTimeout(() => {
+                  setFloatingDamageNumbers(prev => prev.filter(d => d.id !== floatingId))
+                }, 1500)
+              }
+              
+              // Turn already switched at start of combatTick, just update display time
+              setLastAttackTime(Date.now())
+              
+              // Check if enemy dies (health <= 0) - stop immediately, don't allow negative health
+              // CRITICAL: Check BEFORE updating the ref, and use a unique attack ID for victory messages
+              if (newEnemyHealth <= 0 && actualEnemyHealth > 0) {
+                // Enemy defeated - award rewards
+                // Use a unique attack ID for victory messages to prevent deduplication
+                const victoryAttackId = `${lastAttackIdRef.current}-victory`
+                addMessage(`You defeated ${currentEnemy.name}!`, 'info', victoryAttackId)
+                // Queue store updates instead of calling directly
+                storeUpdates.push(() => {
+                  addXP(skillId, currentEnemy.xpReward)
+                  addGold(currentEnemy.goldReward)
+                })
+                const rewardAttackId = `${lastAttackIdRef.current}-reward`
+                addMessage(`Gained ${currentEnemy.xpReward} XP and ${currentEnemy.goldReward} gold`, 'info', rewardAttackId)
+                
+                // Set ref immediately to prevent race conditions
+                isSearchingRef.current = true
+                
+                // Start searching for new enemy (3 second animation period)
+                setSearchingForEnemy(true)
+                
+                // Reset and stop progress bars during search
+                setAttackSpeedProgress(0)
+                setEnemyAttackSpeedProgress(0)
+                
+                // Clear any existing search timer
+                if (searchTimerRef.current) {
+                  clearTimeout(searchTimerRef.current)
+                }
+                
+                // After 3 seconds, reset enemy health to full for next spawn
+                searchTimerRef.current = setTimeout(() => {
+                  isSearchingRef.current = false
+                  setSearchingForEnemy(false)
+                  enemyHealthRef.current = currentEnemy.maxHealth
+                  setEnemyHealth(currentEnemy.maxHealth)
+                  combatProcessingRef.current = false // Unlock when search completes
+                  // Reset attack timers for new enemy
+                  lastPlayerAttackTimeRef.current = Date.now()
+                  lastEnemyAttackTimeRef.current = Date.now()
+                  attackerTurnRef.current = 'player'
+                  // Reset progress bars for new enemy
+                  setAttackSpeedProgress(0)
+                  setEnemyAttackSpeedProgress(0)
+                }, 3000)
+                
+                // Return 0 to indicate enemy is dead (will be reset after search period)
+                // Keep locked - will be unlocked when search completes
+                return 0
+              }
+              
+              // If already searching, don't process this attack
+              if (isSearchingRef.current) {
+                shouldUnlock = true
+                shouldClearAttackId = true
+                return actualEnemyHealth
+              }
+              
+              // Don't unlock here - do it after callback completes to prevent race conditions
+              // Mark for unlock instead
+              shouldUnlock = true
+              shouldClearAttackId = true
+              return newEnemyHealth
+            } else {
+              // Another tick updated health before us - this attack is invalid
+              // Mark as applied to prevent further processing
+              playerDamageApplied = true
+              console.log('[COMBAT] Player attack failed atomic check:', {
+                expectedHealth: actualEnemyHealth,
+                actualHealth: enemyHealthRef.current,
+                attackId: lastAttackIdRef.current,
+                finalDamage
+              })
+              shouldUnlock = true
+              shouldClearAttackId = true
+              return enemyHealthRef.current
+            }
           } else if (currentTurn === 'enemy') {
             // Enemy attacks
+            // CRITICAL: Use the pre-selected attack, don't select a new one
+            // This prevents React from selecting different attacks on multiple callback invocations
+            if (!selectedEnemyAttack) {
+              console.log('[COMBAT] ERROR: No enemy attack selected! This should not happen.')
+              shouldUnlock = true
+              shouldClearAttackId = true
+              return actualEnemyHealth
+            }
+            
+            const attack = selectedEnemyAttack
             const currentStats = calculatePlayerStats()
-            const attack = currentEnemy.attacks[Math.floor(Math.random() * currentEnemy.attacks.length)]
+            
+            console.log('[COMBAT] Enemy attack processing (using pre-selected attack):', {
+              attackName: attack.name,
+              attackType: attack.type,
+              attackId: lastAttackIdRef.current,
+              currentPlayerHealth
+            })
             
             // Calculate enemy hit chance against player using the formula: H = Aff × (a / d) + m
             // Enemy's accuracy (for now, use a base value based on enemy level)
@@ -793,10 +1104,11 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
             
             // If hit chance is less than 1%, all attacks miss
             if (finalEnemyHitChance < 1) {
-              addMessage(`${currentEnemy.name} misses you!`, 'info')
+              addMessage(`${currentEnemy.name} misses you!`, 'info', lastAttackIdRef.current)
               // Turn already switched at start of combatTick, just update display time
               setLastEnemyAttackTime(Date.now())
               combatProcessingRef.current = false // Unlock
+              lastAttackIdRef.current = '' // Clear attack ID
               return actualEnemyHealth
             }
             
@@ -825,28 +1137,111 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
             
             const damage = Math.floor(baseDamage * Math.max(0.1, defenseMultiplier))
             
-            // Award XP for blocking: 0.4 XP per point of damage blocked
-            if (isBlocking && damageWithoutBlock > damage) {
-              const damageBlocked = damageWithoutBlock - damage
-              const xpToAward = Math.floor(damageBlocked * 0.4)
-              // Queue store update instead of calling directly
-              storeUpdates.push(() => addCombatSubStatXP('defence', xpToAward))
+            // Early exit if player is already dead or we're searching for a new enemy
+            // Check BEFORE calculating damage to prevent creating log messages for invalid attacks
+            if (currentPlayerHealth <= 0 || isSearchingRef.current) {
+              // Player already dead or searching, skip this attack
+              console.log('[COMBAT] Enemy attack skipped - player dead or searching:', {
+                playerHealth: currentPlayerHealth,
+                isSearching: isSearchingRef.current,
+                attackId: lastAttackIdRef.current
+              })
+              combatProcessingRef.current = false // Unlock
+              lastAttackIdRef.current = '' // Clear attack ID
+              return actualEnemyHealth
             }
             
-            if (isBlocking) {
-              addMessage(`${currentEnemy.name} deals ${damage} ${attack.type} damage to you (BLOCKED)`, 'enemy-damage')
+            // Calculate new player health - cap damage at current health to prevent overkill
+            const newPlayerHealth = Math.max(0, currentPlayerHealth - damage)
+            
+            console.log('[COMBAT] Enemy attack calculated:', {
+              attackId: lastAttackIdRef.current,
+              attackName: attack.name,
+              attackType: attack.type,
+              baseDamage: attack.damage,
+              finalDamage: damage,
+              playerHealth: currentPlayerHealth,
+              newPlayerHealth,
+              isBlocking,
+              hitChance: finalEnemyHitChance
+            })
+            
+            // Update player health immediately (synchronously) so it's reflected in the outer callback return
+            // This ensures the health update actually happens, even with nested state updates
+            // CRITICAL: Only update if we haven't already updated in this attack cycle
+            // This prevents multiple attacks from overwriting each other's health updates
+            if (damage > 0 && currentPlayerHealth > 0 && !hasHealthBeenUpdated) {
+              updatedPlayerHealth = newPlayerHealth // Update immediately, before any async operations
+              hasHealthBeenUpdated = true // Mark that health has been updated
+              console.log('[COMBAT] Enemy attack updating player health:', {
+                attackId: lastAttackIdRef.current,
+                oldHealth: currentPlayerHealth,
+                damage,
+                newHealth: updatedPlayerHealth,
+                hasHealthBeenUpdated
+              })
+            } else if (hasHealthBeenUpdated) {
+              console.log('[COMBAT] Enemy attack SKIPPING health update - already updated in this attack:', {
+                attackId: lastAttackIdRef.current,
+                currentHealth: currentPlayerHealth,
+                calculatedNewHealth: newPlayerHealth,
+                storedUpdatedHealth: updatedPlayerHealth
+              })
             } else {
-              addMessage(`${currentEnemy.name} deals ${damage} ${attack.type} damage to you`, 'enemy-damage')
+              console.log('[COMBAT] Enemy attack NOT updating health:', {
+                attackId: lastAttackIdRef.current,
+                damage,
+                playerHealth: currentPlayerHealth,
+                reason: damage <= 0 ? 'no damage' : 'player already dead'
+              })
+            }
+            
+            // Only create visual effects (combat log messages) if damage was actually applied
+            // CRITICAL: Add message separately from health update - use hasMessageBeenAdded flag
+            // This ensures message is added on first processing, even if health was already updated
+            // Note: We check !hasMessageBeenAdded to prevent duplicate messages when React calls callback multiple times
+            if (damage > 0 && currentPlayerHealth > 0) {
+              // Only add message if we haven't added it yet in this attack cycle
+              if (!hasMessageBeenAdded) {
+                hasMessageBeenAdded = true // Mark that message has been added
+              
+              // Award XP for blocking: 0.4 XP per point of damage blocked
+              if (isBlocking && damageWithoutBlock > damage) {
+                const damageBlocked = damageWithoutBlock - damage
+                const xpToAward = Math.floor(damageBlocked * 0.4)
+                // Queue store update instead of calling directly
+                storeUpdates.push(() => addCombatSubStatXP('defence', xpToAward))
+              }
+              
+              // Add combat log message - only if damage is actually being applied
+              const messageText = isBlocking
+                ? `${currentEnemy.name} deals ${damage} ${attack.type} damage to you (BLOCKED)`
+                : `${currentEnemy.name} deals ${damage} ${attack.type} damage to you`
+              
+              console.log('[COMBAT] Enemy adding message:', {
+                message: messageText,
+                attackId: lastAttackIdRef.current,
+                damage,
+                hasMessageBeenAdded
+              })
+              
+                addMessage(messageText, 'enemy-damage', lastAttackIdRef.current)
+              } else {
+                console.log('[COMBAT] Enemy attack SKIPPING message - already added in this attack:', {
+                  attackId: lastAttackIdRef.current,
+                  damage,
+                  currentPlayerHealth,
+                  hasMessageBeenAdded
+                })
+              }
             }
             
             // Turn already switched at start of combatTick, just update display time
             setLastEnemyAttackTime(Date.now())
             
-            // Calculate new player health - cap damage at current health to prevent overkill
-            const newPlayerHealth = Math.max(0, currentPlayerHealth - damage)
-            
             // Check if player dies immediately (health <= 0) - don't wait for state update
-            if (newPlayerHealth <= 0 && !hasDiedRef.current) {
+            // Only process death if damage was actually applied
+            if (newPlayerHealth <= 0 && !hasDiedRef.current && damage > 0 && currentPlayerHealth > 0) {
               // Mark death as handled immediately
               hasDiedRef.current = true
               
@@ -901,7 +1296,8 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
               })
               
               // Set health to 0 and reset enemy health
-              setPlayerHealth(0)
+              // Don't call setPlayerHealth here - we'll return 0 from the callback instead
+              updatedPlayerHealth = 0
               enemyHealthRef.current = currentEnemy.maxHealth
               setEnemyHealth(currentEnemy.maxHealth)
               
@@ -910,21 +1306,62 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
               setShowDeathPopup(true)
               
               combatProcessingRef.current = false // Unlock
+              lastAttackIdRef.current = '' // Clear attack ID
               return currentEnemy.maxHealth
             }
             
-            // Update player health (only if not dead)
-            setPlayerHealth(newPlayerHealth)
+            // Health update was already done above (synchronously) before any async operations
+            // This ensures the return value from setPlayerHealth callback is correct
             
-            combatProcessingRef.current = false // Unlock
+            console.log('[COMBAT] Enemy attack completed:', {
+              attackId: lastAttackIdRef.current,
+              damageApplied: damage > 0 && currentPlayerHealth > 0,
+              updatedHealth: updatedPlayerHealth,
+              currentHealth: currentPlayerHealth
+            })
+            
+            // Don't unlock here - do it after callback completes
+            shouldUnlock = true
+            shouldClearAttackId = true
             return actualEnemyHealth
           } else {
             // Turn doesn't match (shouldn't happen, but safety fallback)
             combatProcessingRef.current = false // Unlock
+            lastAttackIdRef.current = '' // Clear attack ID
             return actualEnemyHealth
           }
         })
-        return currentPlayerHealth
+        // Return the updated player health from the setPlayerHealth callback
+        // This ensures the health update actually happens
+        console.log('[COMBAT] setPlayerHealth callback returning:', {
+          updatedHealth: updatedPlayerHealth,
+          currentTurn,
+          timestamp: Date.now(),
+          shouldUnlock,
+          shouldClearAttackId
+        })
+        
+        // CRITICAL FIX: Defer unlock/ID clearing until AFTER React's state updates complete
+        // The attack ID must remain set until ALL nested callbacks finish to prevent duplicate processing
+        if (shouldUnlock || shouldClearAttackId) {
+          // Use setTimeout to ensure this runs after React's render cycle completes
+          setTimeout(() => {
+            console.log('[COMBAT] Unlocking after all callbacks complete:', {
+              shouldUnlock,
+              shouldClearAttackId,
+              currentAttackId: lastAttackIdRef.current,
+              timestamp: Date.now()
+            })
+            if (shouldUnlock) {
+              combatProcessingRef.current = false
+            }
+            if (shouldClearAttackId) {
+              lastAttackIdRef.current = ''
+            }
+          }, 0)
+        }
+        
+        return updatedPlayerHealth
       })
       
           // Execute all queued store updates after state updates complete
@@ -935,6 +1372,7 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
         } catch (error) {
           // Ensure unlock on error
           combatProcessingRef.current = false
+          lastAttackIdRef.current = '' // Clear attack ID
           console.error('Error in combatTick:', error)
         }
       }, 0) // Defer to next event loop to avoid render-phase updates
@@ -964,16 +1402,88 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
     }
   }, [combatActive, currentEnemy, skillId, addGold, addXP, onCombatStop, selectedAttackType, addCombatSubStatXP, removeXP, removeCombatSubStatXP, skillCategories, equippedItems, combatSubStats])
 
-  const addMessage = (message: string, type: CombatMessage['type']) => {
-    setCombatLog((prev) => [
-      ...prev,
-      {
-        id: `${Date.now()}-${Math.random()}`,
+  const addMessage = (message: string, type: CombatMessage['type'], attackId?: string) => {
+    const now = Date.now()
+    
+    // If attackId is provided, check if we've already logged a message for this attack
+    // This prevents duplicate messages from the same attack when React calls callbacks multiple times
+    if (attackId && loggedAttackIdsRef.current.has(attackId)) {
+      console.log('[COMBAT] Message deduplication - attack ID already logged:', {
         message,
-        type,
-        timestamp: Date.now(),
-      },
-    ])
+        attackId,
+        timestamp: now
+      })
+      return
+    }
+    
+    // Also check content-based deduplication for messages without attack IDs (fallback)
+    if (!attackId && lastMessageRef.current) {
+      const timeSinceLastMessage = now - lastMessageRef.current.timestamp
+      if (lastMessageRef.current.message === message && timeSinceLastMessage < 100) {
+        console.log('[COMBAT] Message deduplication - skipping duplicate (content-based):', {
+          message,
+          timeSinceLast: timeSinceLastMessage,
+          lastMessage: lastMessageRef.current.message
+        })
+        return
+      }
+    }
+    
+    // Mark this attack as logged if attackId provided
+    if (attackId) {
+      loggedAttackIdsRef.current.add(attackId)
+    }
+    
+    // Update last message reference
+    lastMessageRef.current = { message, timestamp: now }
+    
+    // Add to pending messages queue
+    const messageId = `${now}-${Math.random()}`
+    pendingMessagesRef.current.push({
+      id: messageId,
+      message,
+      type,
+      timestamp: now
+    })
+    
+    console.log('[COMBAT] Message queued:', {
+      message,
+      type,
+      attackId: attackId || 'none',
+      queueLength: pendingMessagesRef.current.length
+    })
+    
+    // Clear any existing timeout
+    if (messageQueueTimeoutRef.current) {
+      clearTimeout(messageQueueTimeoutRef.current)
+    }
+    
+    // Batch messages: flush queue after 10ms of no new messages (or immediately if queue is getting large)
+    // This prevents multiple state updates and ensures React batches properly
+    const flushDelay = pendingMessagesRef.current.length >= 5 ? 0 : 10
+    
+    messageQueueTimeoutRef.current = setTimeout(() => {
+      const messagesToAdd = [...pendingMessagesRef.current]
+      pendingMessagesRef.current = []
+      
+      console.log('[COMBAT] Flushing message queue:', {
+        messageCount: messagesToAdd.length,
+        messages: messagesToAdd.map(m => m.message)
+      })
+      
+      // Single state update with all pending messages
+      setCombatLog((prev) => {
+        const newLog = [...prev, ...messagesToAdd]
+        console.log('[COMBAT] Combat log state updated (batched):', {
+          messagesAdded: messagesToAdd.length,
+          newLogLength: newLog.length,
+          lastMessages: newLog.slice(-3).map(m => m.message)
+        })
+        return newLog
+      })
+      
+      messageQueueTimeoutRef.current = null
+    }, flushDelay)
   }
 
   if (!currentEnemy) {
@@ -1152,29 +1662,9 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
               <div className="equipment-grid">
                 {Array.from({ length: 4 }, (_, rowIndex) =>
                   Array.from({ length: 3 }, (_, colIndex) => {
-                    let emoji = null
-                    
-                    // Row 1: necklace, helmet, cape
-                    if (rowIndex === 0 && colIndex === 0) emoji = '📿'
-                    if (rowIndex === 0 && colIndex === 1) emoji = '⛑️'
-                    if (rowIndex === 0 && colIndex === 2) emoji = '🧥'
-                    
-                    // Row 2: sword, armor, shield
-                    if (rowIndex === 1 && colIndex === 0) emoji = '⚔️'
-                    if (rowIndex === 1 && colIndex === 1) emoji = '🤺'
-                    if (rowIndex === 1 && colIndex === 2) emoji = '🛡️'
-                    
-                    // Row 3: glove, pants, ring
-                    if (rowIndex === 2 && colIndex === 0) emoji = '🧤'
-                    if (rowIndex === 2 && colIndex === 1) emoji = '👖'
-                    if (rowIndex === 2 && colIndex === 2) emoji = '💍'
-                    
-                    // Row 4: book, boots, bible
-                    if (rowIndex === 3 && colIndex === 0) emoji = '📖'
-                    if (rowIndex === 3 && colIndex === 1) emoji = '👢'
-                    if (rowIndex === 3 && colIndex === 2) emoji = '📚'
-                    
                     const slotKey = `${rowIndex}-${colIndex}`
+                    const placeholderImage = EQUIPMENT_SLOT_IMAGES[slotKey] || '/images/equipment/augment_equip.png'
+                    
                     const equippedItemId = equippedItems[slotKey]
                     const equippedItem = equippedItemId 
                       ? ENGINEERING_RECIPES.find(r => r.id === equippedItemId)
@@ -1190,7 +1680,11 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
                         {equippedItem ? (
                           <span style={{ fontSize: '2rem' }}>{equippedItem.icon || '⚙️'}</span>
                         ) : (
-                          emoji && <span style={{ fontSize: '2rem' }}>{emoji}</span>
+                          <img 
+                            src={placeholderImage} 
+                            alt="equipment slot"
+                            style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+                          />
                         )}
                       </div>
                     )
@@ -1218,7 +1712,11 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
                   </span>
                 ) : (
                   <>
-                    <span style={{ fontSize: '1.8rem' }}>💊</span>
+                    <img 
+                      src={EQUIPMENT_SLOT_IMAGES['medical']} 
+                      alt="Medical"
+                      style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+                    />
                     <div className="usable-item-label">Medical</div>
                   </>
                 )}
@@ -1236,7 +1734,11 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
                   </span>
                 ) : (
                   <>
-                    <span style={{ fontSize: '1.8rem' }}>🍖</span>
+                    <img 
+                      src={EQUIPMENT_SLOT_IMAGES['food']} 
+                      alt="Food"
+                      style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+                    />
                     <div className="usable-item-label">Food</div>
                   </>
                 )}
@@ -1288,6 +1790,20 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
             </div>
             <div className="enemy-display">
               <div className={`enemy-image-container ${enemyHitAnimation ? enemyHitAnimation : ''}`}>
+                {/* Floating Damage Numbers */}
+                {floatingDamageNumbers.map((floating) => (
+                  <div
+                    key={floating.id}
+                    className={`floating-damage ${floating.isCrit ? 'crit' : ''}`}
+                    style={{
+                      left: `${floating.x}%`,
+                      top: `${floating.y}%`,
+                    }}
+                  >
+                    -{floating.damage}{floating.isCrit ? '!' : ''}
+                  </div>
+                ))}
+                
                 {searchingForEnemy ? (
                   // Searching animation
                   <div className="enemy-searching">

@@ -18,6 +18,12 @@
   align-items: center;
 }
 
+.inventory-header-stats {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
 .inventory-title {
   font-size: 1.2rem;
   color: #ff6b6b;
@@ -30,6 +36,29 @@
   font-size: 0.85rem;
   color: #888888;
   letter-spacing: 1px;
+}
+
+.inventory-knowledge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #888888;
+  letter-spacing: 1px;
+}
+
+.knowledge-icon {
+  font-size: 1rem;
+}
+
+.knowledge-label {
+  color: #888888;
+}
+
+.knowledge-value {
+  color: #ffd700;
+  font-weight: bold;
+  text-shadow: 0 0 3px rgba(255, 215, 0, 0.5);
 }
 
 .inventory-content-wrapper {
@@ -86,6 +115,13 @@
 .inventory-item-icon {
   font-size: 2rem;
   margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inventory-item-icon img {
+  display: block;
 }
 
 .inventory-item-quantity {
@@ -143,6 +179,13 @@
 
 .details-icon {
   font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.details-icon img {
+  display: block;
 }
 
 .details-name {

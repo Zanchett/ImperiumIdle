@@ -13,10 +13,11 @@ interface User {
   }
 }
 
-import { ActiveSalvagingTask, ResourceRespawn, ResourceGatherCount, ActiveSmeltingTask, ActiveEngineeringTask } from '../types/activeTasks'
+import { ActiveSalvagingTask, ResourceRespawn, ResourceGatherCount, ActiveSmeltingTask, ActiveEngineeringTask, ActiveMedicaeResearchTask } from '../types/activeTasks'
 import { Notification } from '../types/notifications'
 import { ResourceVeterancy, SkillVeterancy, VETERANCY_CONFIG } from '../types/veterancy'
 import { Planet, ActiveContactTask } from '../types/planets'
+import { Enemy } from '../types/enemies'
 import { generateInitialPlanets } from '../data/planets'
 import { initializeVillage, calculateBuildingCost, calculateConstructionTime, calculateBuildingXP, getMaxDailyConstructions, getMaxDailyRecruits, shouldResetDailyLimits, getMaxBuildingLimit, calculateProductionBuildingUpgradeCost, getMaxWorkersForLevel, calculateEffectiveProductionRate } from '../utils/village'
 import { getCumulativeExperience, getExperienceProgress, getExperienceForLevel } from '../utils/experience'
@@ -43,6 +44,10 @@ interface GameState {
   resourceRespawns: ResourceRespawn[]
   resourceGatherCounts: ResourceGatherCount[]
   activeSmeltingTasks: ActiveSmeltingTask[]
+  activeEngineeringTasks: ActiveEngineeringTask[]
+  activeMedicaeResearchTasks: ActiveMedicaeResearchTask[]
+  knowledgePoints: number
+  unlockedMedicaeSkills: string[]
   resourceVeterancies: ResourceVeterancy[]
   skillVeterancies: SkillVeterancy[]
   notifications: Notification[]
@@ -52,6 +57,9 @@ interface GameState {
     defence: { level: number; experience: number; experienceToNext: number }
     agility: { level: number; experience: number; experienceToNext: number }
   }
+  equippedItems: Record<string, string> // slotKey -> itemId
+  combatActive: boolean
+  selectedEnemy: Enemy | null
   addNotification: (message: string) => void
   removeNotification: (id: string) => void
   addResourceVeterancyXP: (resourceId: string, amount: number) => void
@@ -65,6 +73,14 @@ interface GameState {
   startEngineering: (recipeId: string, duration: number, autoResume: boolean) => void
   completeEngineeringTask: (recipeId: string) => void
   stopEngineering: (recipeId: string) => void
+  activeMedicaeResearchTasks: ActiveMedicaeResearchTask[]
+  startMedicaeResearch: (topicId: string, duration: number, autoResume: boolean) => void
+  completeMedicaeResearchTask: (topicId: string) => void
+  stopMedicaeResearch: (topicId: string) => void
+  knowledgePoints: number
+  addKnowledgePoints: (amount: number) => void
+  unlockedMedicaeSkills: string[]
+  unlockMedicaeSkill: (skillId: string) => void
   planets: Planet[]
   activeContactTasks: ActiveContactTask[]
   startContact: (planetId: string, duration: number) => void
@@ -105,6 +121,9 @@ interface GameState {
   setAutoResume: (resourceId: string, autoResume: boolean) => void
   stopSalvaging: (resourceId: string) => void
   setInventoryOpen: (open: boolean) => void
+  setEquippedItem: (slotKey: string, itemId: string | null) => void
+  setCombatActive: (active: boolean) => void
+  setSelectedEnemy: (enemy: Enemy | null) => void
   logout: () => void
 }
 
@@ -124,6 +143,9 @@ export const useGameStore = create<GameState>((set) => ({
   resourceGatherCounts: [],
   activeSmeltingTasks: [],
   activeEngineeringTasks: [],
+  activeMedicaeResearchTasks: [],
+  knowledgePoints: 0,
+  unlockedMedicaeSkills: [],
   planets: generateInitialPlanets(),
   activeContactTasks: [],
   village: initializeVillage(),
@@ -136,6 +158,9 @@ export const useGameStore = create<GameState>((set) => ({
     defence: { level: 1, experience: 0, experienceToNext: getExperienceForLevel(2) },
     agility: { level: 1, experience: 0, experienceToNext: getExperienceForLevel(2) },
   },
+  equippedItems: {},
+  combatActive: false,
+  selectedEnemy: null,
   addNotification: (message: string) =>
     set((state) => ({
       notifications: [
@@ -583,6 +608,37 @@ export const useGameStore = create<GameState>((set) => ({
   stopEngineering: (recipeId: string) =>
     set((state) => ({
       activeEngineeringTasks: state.activeEngineeringTasks.filter((task) => task.recipeId !== recipeId),
+    })),
+  startMedicaeResearch: (topicId: string, duration: number, autoResume: boolean) =>
+    set((state) => ({
+      activeMedicaeResearchTasks: [
+        ...state.activeMedicaeResearchTasks.filter((task) => task.topicId !== topicId),
+        {
+          topicId,
+          startTime: Date.now(),
+          duration,
+          completed: false,
+          autoResume,
+        },
+      ],
+    })),
+  completeMedicaeResearchTask: (topicId: string) =>
+    set((state) => ({
+      activeMedicaeResearchTasks: state.activeMedicaeResearchTasks.map((task) =>
+        task.topicId === topicId ? { ...task, completed: true } : task
+      ),
+    })),
+  stopMedicaeResearch: (topicId: string) =>
+    set((state) => ({
+      activeMedicaeResearchTasks: state.activeMedicaeResearchTasks.filter((task) => task.topicId !== topicId),
+    })),
+  addKnowledgePoints: (amount: number) =>
+    set((state) => ({ knowledgePoints: state.knowledgePoints + amount })),
+  unlockMedicaeSkill: (skillId: string) =>
+    set((state) => ({
+      unlockedMedicaeSkills: state.unlockedMedicaeSkills.includes(skillId)
+        ? state.unlockedMedicaeSkills
+        : [...state.unlockedMedicaeSkills, skillId],
     })),
   addCombatSubStatXP: (statType: 'strength' | 'attack' | 'defence' | 'agility', amount: number) =>
     set((state) => {
@@ -1132,6 +1188,21 @@ export const useGameStore = create<GameState>((set) => ({
       state.addNotification('[CHEAT] Added 1 worker')
       return { village }
     }),
+  setEquippedItem: (slotKey: string, itemId: string | null) =>
+    set((state) => {
+      if (itemId === null) {
+        const { [slotKey]: _, ...rest } = state.equippedItems
+        return { equippedItems: rest }
+      }
+      return {
+        equippedItems: {
+          ...state.equippedItems,
+          [slotKey]: itemId,
+        },
+      }
+    }),
+  setCombatActive: (active: boolean) => set({ combatActive: active }),
+  setSelectedEnemy: (enemy: Enemy | null) => set({ selectedEnemy: enemy }),
   logout: () => {
     set({ authenticated: false, user: null, connected: false })
   },

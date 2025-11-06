@@ -324,6 +324,13 @@
 .trade-item-icon {
   font-size: 1.5rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trade-item-icon img {
+  display: block;
 }
 
 .trade-item-info {

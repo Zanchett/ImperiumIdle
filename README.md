@@ -1,7 +1,5 @@
 # ImperiumIdle - Multiplayer Idle Game
 
-An idle game similar to Melvor Idle, with multiplayer features including base invasions, trading, PvP, and chat.
-
 ## Tech Stack
 
 - **Frontend**: React + TypeScript
@@ -10,7 +8,7 @@ An idle game similar to Melvor Idle, with multiplayer features including base in
 - **Build Tool**: Vite (fast development and building)
 - **Database**: MongoDB (or PostgreSQL - can be configured later)
 
-## Prerequisites Installation (Windows Fresh Install)
+## Prerequisites Installation 
 
 ### Step 1: Install Node.js (Required)
 1. Go to https://nodejs.org/

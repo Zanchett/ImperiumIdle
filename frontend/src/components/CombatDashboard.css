@@ -589,6 +589,70 @@
   animation: hitStab 0.4s ease-out;
 }
 
+/* Floating Damage Numbers */
+.floating-damage {
+  position: absolute;
+  pointer-events: none;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #ff4444;
+  text-shadow: 
+    0 0 5px rgba(255, 0, 0, 0.8),
+    0 0 10px rgba(255, 0, 0, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+  z-index: 100;
+  transform: translate(-50%, -50%);
+  animation: floatDamage 1.5s ease-out forwards;
+  user-select: none;
+}
+
+.floating-damage.crit {
+  font-size: 1.8rem;
+  color: #ffd700;
+  font-weight: 900;
+  text-shadow: 
+    0 0 10px rgba(255, 215, 0, 0.9),
+    0 0 20px rgba(255, 215, 0, 0.7),
+    0 0 30px rgba(255, 215, 0, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.9);
+  animation: floatDamageCrit 1.5s ease-out forwards;
+}
+
+@keyframes floatDamage {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0) scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(-10px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-60px) scale(0.6);
+  }
+}
+
+@keyframes floatDamageCrit {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0) scale(0.9);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(-5px) scale(1.1);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(-15px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-80px) scale(0.7);
+  }
+}
+
 .enemy-attacks-overlay {
   position: absolute;
   top: 0.75rem;
@@ -916,6 +980,18 @@
 .item-icon {
   font-size: 2.5rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+}
+
+.item-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .item-info {

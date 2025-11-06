@@ -31,3 +31,11 @@ export interface ActiveEngineeringTask {
   completed: boolean
   autoResume: boolean // Should auto-resume when completed
 }
+
+export interface ActiveMedicaeResearchTask {
+  topicId: string
+  startTime: number // Timestamp when task started
+  duration: number // Total duration in milliseconds
+  completed: boolean
+  autoResume: boolean // Should auto-resume when completed
+}

@@ -1,5 +1,5 @@
 import { Planet, PlanetTradeItem, PLANET_RESOURCE_POOLS } from '../types/planets'
-import { SALVAGING_RESOURCES } from '../types/salvagingResources'
+import { SALVAGING_RESOURCES, SALVAGING_RESOURCE_IMAGES } from '../types/salvagingResources'
 import { SMELTING_RECIPES } from '../types/smeltingResources'
 import { FOOD_RESOURCES } from '../types/foodResources'
 import { HERB_RESOURCES } from '../types/herbResources'
@@ -18,10 +18,12 @@ function getAllResourceMetadata(): Map<string, ResourceMetadata> {
 
   // Add salvaging resources
   SALVAGING_RESOURCES.forEach((resource) => {
+    // Use image path for salvaging resources, fallback to emoji if image not found
+    const imagePath = SALVAGING_RESOURCE_IMAGES[resource.id] || resource.icon || '📦'
     resources.set(resource.id, {
       id: resource.id,
       name: resource.name,
-      icon: resource.icon || '📦',
+      icon: imagePath, // Store image path instead of emoji
       baseValue: resource.value,
     })
   })

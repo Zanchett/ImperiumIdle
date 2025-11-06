@@ -18,7 +18,9 @@ export default function BackgroundEngineering() {
     resources,
     addNotification,
     addSkillVeterancyXP,
+    addResourceVeterancyXP,
     skillVeterancies,
+    resourceVeterancies,
   } = useGameStore()
 
   const [currentTime, setCurrentTime] = useState(Date.now())
@@ -54,7 +56,9 @@ export default function BackgroundEngineering() {
       const elapsed = currentTime - task.startTime
       if (elapsed >= task.duration) {
         // Get veterancy bonuses
+        const recipeVeterancy = resourceVeterancies.find((rv) => rv.resourceId === recipe.id)
         const skillVeterancy = skillVeterancies.find((sv) => sv.skillId === 'engineering')
+        const recipeVeterancyLevel = recipeVeterancy?.level || 0
         const skillVeterancyLevel = skillVeterancy?.level || 0
         const specialBonuses = getSkillVeterancySpecialBonuses('engineering', skillVeterancyLevel)
         
@@ -78,7 +82,10 @@ export default function BackgroundEngineering() {
         addResource(recipe.id, 1)
         addXP('engineering', finalXP)
         
-        // Award skill veterancy XP (0.5:1 ratio)
+        // Award veterancy XP
+        // Recipe veterancy: 1:1 ratio with skill XP
+        addResourceVeterancyXP(recipe.id, finalXP)
+        // Skill veterancy: 0.5:1 ratio with skill XP
         addSkillVeterancyXP('engineering', Math.floor(finalXP * 0.5))
         
         // Show notification
@@ -119,7 +126,9 @@ export default function BackgroundEngineering() {
     startEngineering,
     completeEngineeringTask,
     addSkillVeterancyXP,
+    addResourceVeterancyXP,
     skillVeterancies,
+    resourceVeterancies,
   ])
 
   // This component doesn't render anything - it just runs in the background

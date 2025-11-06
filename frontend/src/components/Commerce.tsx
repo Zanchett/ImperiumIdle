@@ -282,7 +282,17 @@ export default function Commerce({ skillId }: CommerceProps) {
                         return (
                           <div key={`${selectedPlanet.id}-${item.resourceId}-buy`} className="trade-item-card">
                             <div className="trade-item-header">
-                              <span className="trade-item-icon">{item.icon}</span>
+                              <span className="trade-item-icon">
+                                {item.icon.startsWith('/') ? (
+                                  <img 
+                                    src={item.icon}
+                                    alt={item.resourceName}
+                                    style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }}
+                                  />
+                                ) : (
+                                  item.icon
+                                )}
+                              </span>
                               <div className="trade-item-info">
                                 <h4 className="trade-item-name">{item.resourceName}</h4>
                                 <p className="trade-item-price">
@@ -358,7 +368,17 @@ export default function Commerce({ skillId }: CommerceProps) {
                         return (
                           <div key={`${selectedPlanet.id}-${item.resourceId}-sell`} className="trade-item-card">
                             <div className="trade-item-header">
-                              <span className="trade-item-icon">{item.icon}</span>
+                              <span className="trade-item-icon">
+                                {item.icon.startsWith('/') ? (
+                                  <img 
+                                    src={item.icon}
+                                    alt={item.resourceName}
+                                    style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }}
+                                  />
+                                ) : (
+                                  item.icon
+                                )}
+                              </span>
                               <div className="trade-item-info">
                                 <h4 className="trade-item-name">{item.resourceName}</h4>
                                 <p className="trade-item-price">

@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useGameStore } from '../stores/gameStore'
-import { SALVAGING_RESOURCES } from '../types/salvagingResources'
+import { SALVAGING_RESOURCES, SALVAGING_RESOURCE_IMAGES } from '../types/salvagingResources'
 import { SMELTING_RECIPES } from '../types/smeltingResources'
 import { ENGINEERING_RECIPES } from '../types/engineeringResources'
 import { FOOD_RESOURCES } from '../types/foodResources'
 import { HERB_RESOURCES } from '../types/herbResources'
+import { MEDICAL_ITEMS } from '../types/medicalItems'
 import './Inventory.css'
 
 export default function Inventory() {
-  const { inventoryOpen, resources, removeResource, addGold } = useGameStore()
+  const { inventoryOpen, resources, removeResource, addGold, knowledgePoints } = useGameStore()
   const [selectedResource, setSelectedResource] = useState<string | null>(null)
   const [sellAmount, setSellAmount] = useState<number>(1)
 
@@ -38,6 +39,7 @@ export default function Inventory() {
         id: engineering.id,
         name: engineering.name,
         icon: engineering.icon || '⚙️',
+        image: engineering.image, // Include image path
         value: engineering.value,
         description: engineering.description,
         equipmentStats: engineering.equipmentStats,
@@ -65,6 +67,18 @@ export default function Inventory() {
         icon: herb.icon,
         value: herb.value,
         description: herb.description,
+      }
+    }
+
+    // Check medical items
+    const medical = MEDICAL_ITEMS.find((r) => r.id === resourceId)
+    if (medical) {
+      return {
+        id: medical.id,
+        name: medical.name,
+        icon: medical.icon,
+        value: medical.value,
+        description: medical.description,
       }
     }
     
@@ -118,8 +132,15 @@ export default function Inventory() {
     <div className="inventory-panel">
       <div className="inventory-header">
         <h2 className="inventory-title">INVENTORY</h2>
-        <div className="inventory-capacity">
-          Items: {resourceEntries.length}
+        <div className="inventory-header-stats">
+          <div className="inventory-capacity">
+            Items: {resourceEntries.length}
+          </div>
+          <div className="inventory-knowledge">
+            <span className="knowledge-icon">📚</span>
+            <span className="knowledge-label">Knowledge:</span>
+            <span className="knowledge-value">{knowledgePoints.toLocaleString()}</span>
+          </div>
         </div>
       </div>
 
@@ -135,6 +156,13 @@ export default function Inventory() {
               resourceEntries.map(([resourceId, amount]) => {
                 const resource = getResourceData(resourceId)
                 const isSelected = selectedResource === resourceId
+                const isSalvagingResource = SALVAGING_RESOURCES.some((r) => r.id === resourceId)
+                // Check for image: salvaging resources use SALVAGING_RESOURCE_IMAGES, engineering recipes use image property
+                const imagePath = isSalvagingResource 
+                  ? (SALVAGING_RESOURCE_IMAGES[resourceId] || '/images/resources/augment_equip.png')
+                  : (resource && 'image' in resource && resource.image) 
+                    ? resource.image 
+                    : null
                 
                 return (
                   <div
@@ -143,7 +171,15 @@ export default function Inventory() {
                     onClick={() => handleResourceSelect(resourceId)}
                   >
                     <div className="inventory-item-icon">
-                      {resource?.icon || '⚙️'}
+                      {imagePath ? (
+                        <img 
+                          src={imagePath}
+                          alt={resource?.name || 'Resource'}
+                          style={{ width: '2rem', height: '2rem', objectFit: 'contain' }}
+                        />
+                      ) : (
+                        resource?.icon || '⚙️'
+                      )}
                     </div>
                     <div className="inventory-item-quantity">
                       {amount.toLocaleString()}
@@ -158,7 +194,32 @@ export default function Inventory() {
         {selectedResourceData && (
           <div className="inventory-details">
             <div className="details-header">
-              <div className="details-icon">{selectedResourceData.icon || '⚙️'}</div>
+              <div className="details-icon">
+                {(() => {
+                  // Check for salvaging resource image
+                  if (SALVAGING_RESOURCE_IMAGES[selectedResource]) {
+                    return (
+                      <img 
+                        src={SALVAGING_RESOURCE_IMAGES[selectedResource]}
+                        alt={selectedResourceData.name}
+                        style={{ width: '3rem', height: '3rem', objectFit: 'contain' }}
+                      />
+                    )
+                  }
+                  // Check for engineering recipe image
+                  if (selectedResourceData && 'image' in selectedResourceData && selectedResourceData.image) {
+                    return (
+                      <img 
+                        src={selectedResourceData.image}
+                        alt={selectedResourceData.name}
+                        style={{ width: '3rem', height: '3rem', objectFit: 'contain' }}
+                      />
+                    )
+                  }
+                  // Fallback to icon
+                  return selectedResourceData.icon || '⚙️'
+                })()}
+              </div>
               <div className="details-name">{selectedResourceData.name}</div>
             </div>
             <div className="details-description">

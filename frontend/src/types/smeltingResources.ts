@@ -21,14 +21,14 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     icon: '🔩',
     description: 'Basic smelted metal',
     ingredients: [
-      { resourceId: 'scrap-metal', amount: 2 },
+      { resourceId: 'ferrite-ore', amount: 2 },
     ],
     time: 2,
   },
   {
     id: 'placeholder-metal-2',
     name: 'Placeholder Metal 2',
-    levelRequired: 10,
+    levelRequired: 20,
     xpReward: 8,
     icon: '⚙️',
     description: 'Reinforced smelted metal',
@@ -41,7 +41,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
   {
     id: 'placeholder-metal-3',
     name: 'Placeholder Metal 3',
-    levelRequired: 25,
+    levelRequired: 40,
     xpReward: 12,
     icon: '🛡️',
     description: 'Hardened metal alloy',
@@ -54,7 +54,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
   {
     id: 'placeholder-metal-4',
     name: 'Placeholder Metal 4',
-    levelRequired: 30,
+    levelRequired: 55,
     xpReward: 15,
     icon: '💎',
     description: 'Refined ceramite alloy',
