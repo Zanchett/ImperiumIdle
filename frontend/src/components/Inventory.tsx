@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../stores/gameStore'
-import { SALVAGING_RESOURCES, SALVAGING_RESOURCE_IMAGES } from '../types/salvagingResources'
-import { SMELTING_RECIPES } from '../types/smeltingResources'
-import { ENGINEERING_RECIPES } from '../types/engineeringResources'
-import { FOOD_RESOURCES } from '../types/foodResources'
-import { HERB_RESOURCES } from '../types/herbResources'
-import { MEDICAL_ITEMS } from '../types/medicalItems'
+import { getItemData, getItemImage } from '../types/items'
 import './Inventory.css'
 
 export default function Inventory() {
@@ -15,82 +10,12 @@ export default function Inventory() {
 
   if (!inventoryOpen) return null
 
-  const getResourceData = (resourceId: string) => {
-    // Check salvaging resources first
-    const salvaging = SALVAGING_RESOURCES.find((r) => r.id === resourceId)
-    if (salvaging) return salvaging
-    
-    // Check smelting recipes (smelted metals)
-    const smelting = SMELTING_RECIPES.find((r) => r.id === resourceId)
-    if (smelting) {
-      return {
-        id: smelting.id,
-        name: smelting.name,
-        icon: smelting.icon || '⚙️',
-        value: 0, // Smelted metals don't have direct value, they're crafting materials
-        description: smelting.description,
-      }
-    }
-    
-    // Check engineering recipes (crafted gear)
-    const engineering = ENGINEERING_RECIPES.find((r) => r.id === resourceId)
-    if (engineering) {
-      return {
-        id: engineering.id,
-        name: engineering.name,
-        icon: engineering.icon || '⚙️',
-        image: engineering.image, // Include image path
-        value: engineering.value,
-        description: engineering.description,
-        equipmentStats: engineering.equipmentStats,
-      }
-    }
-
-    // Check food resources
-    const food = FOOD_RESOURCES.find((r) => r.id === resourceId)
-    if (food) {
-      return {
-        id: food.id,
-        name: food.name,
-        icon: food.icon,
-        value: food.value,
-        description: food.description,
-      }
-    }
-
-    // Check herb resources
-    const herb = HERB_RESOURCES.find((r) => r.id === resourceId)
-    if (herb) {
-      return {
-        id: herb.id,
-        name: herb.name,
-        icon: herb.icon,
-        value: herb.value,
-        description: herb.description,
-      }
-    }
-
-    // Check medical items
-    const medical = MEDICAL_ITEMS.find((r) => r.id === resourceId)
-    if (medical) {
-      return {
-        id: medical.id,
-        name: medical.name,
-        icon: medical.icon,
-        value: medical.value,
-        description: medical.description,
-      }
-    }
-    
-    return null
-  }
-
   const resourceEntries = Object.entries(resources)
     .filter(([_, amount]) => amount > 0)
     .sort(([a], [b]) => {
       // Sort by resource name
-      const resA = getResourceData(a)
-      const resB = getResourceData(b)
+      const resA = getItemData(a)
+      const resB = getItemData(b)
       return (resA?.name || a).localeCompare(resB?.name || b)
     })
 
@@ -103,7 +28,7 @@ export default function Inventory() {
   const handleSell = () => {
     if (!selectedResource) return
     
-    const resource = getResourceData(selectedResource)
+    const resource = getItemData(selectedResource)
     if (!resource || !resource.value || resource.value <= 0) return
 
     const amount = resources[selectedResource] || 0
@@ -121,7 +46,7 @@ export default function Inventory() {
     }
   }
 
-  const selectedResourceData = selectedResource ? getResourceData(selectedResource) : null
+  const selectedResourceData = selectedResource ? getItemData(selectedResource) : null
   const selectedAmount = selectedResource ? (resources[selectedResource] || 0) : 0
   const resourceValue = selectedResourceData?.value || 0
   const totalValue = resourceValue > 0 && sellAmount > 0 
@@ -154,15 +79,9 @@ export default function Inventory() {
               </div>
             ) : (
               resourceEntries.map(([resourceId, amount]) => {
-                const resource = getResourceData(resourceId)
+                const resource = getItemData(resourceId)
                 const isSelected = selectedResource === resourceId
-                const isSalvagingResource = SALVAGING_RESOURCES.some((r) => r.id === resourceId)
-                // Check for image: salvaging resources use SALVAGING_RESOURCE_IMAGES, engineering recipes use image property
-                const imagePath = isSalvagingResource 
-                  ? (SALVAGING_RESOURCE_IMAGES[resourceId] || '/images/resources/augment_equip.png')
-                  : (resource && 'image' in resource && resource.image) 
-                    ? resource.image 
-                    : null
+                const imagePath = getItemImage(resourceId)
                 
                 return (
                   <div
@@ -171,15 +90,11 @@ export default function Inventory() {
                     onClick={() => handleResourceSelect(resourceId)}
                   >
                     <div className="inventory-item-icon">
-                      {imagePath ? (
-                        <img 
-                          src={imagePath}
-                          alt={resource?.name || 'Resource'}
-                          style={{ width: '2rem', height: '2rem', objectFit: 'contain' }}
-                        />
-                      ) : (
-                        resource?.icon || '⚙️'
-                      )}
+                      <img 
+                        src={imagePath}
+                        alt={resource?.name || 'Resource'}
+                        style={{ width: '2rem', height: '2rem', objectFit: 'contain' }}
+                      />
                     </div>
                     <div className="inventory-item-quantity">
                       {amount.toLocaleString()}
@@ -195,30 +110,11 @@ export default function Inventory() {
           <div className="inventory-details">
             <div className="details-header">
               <div className="details-icon">
-                {(() => {
-                  // Check for salvaging resource image
-                  if (SALVAGING_RESOURCE_IMAGES[selectedResource]) {
-                    return (
-                      <img 
-                        src={SALVAGING_RESOURCE_IMAGES[selectedResource]}
-                        alt={selectedResourceData.name}
-                        style={{ width: '3rem', height: '3rem', objectFit: 'contain' }}
-                      />
-                    )
-                  }
-                  // Check for engineering recipe image
-                  if (selectedResourceData && 'image' in selectedResourceData && selectedResourceData.image) {
-                    return (
-                      <img 
-                        src={selectedResourceData.image}
-                        alt={selectedResourceData.name}
-                        style={{ width: '3rem', height: '3rem', objectFit: 'contain' }}
-                      />
-                    )
-                  }
-                  // Fallback to icon
-                  return selectedResourceData.icon || '⚙️'
-                })()}
+                <img 
+                  src={getItemImage(selectedResource)}
+                  alt={selectedResourceData.name}
+                  style={{ width: '3rem', height: '3rem', objectFit: 'contain' }}
+                />
               </div>
               <div className="details-name">{selectedResourceData.name}</div>
             </div>
@@ -243,6 +139,18 @@ export default function Inventory() {
                       <span className="stat-value">{selectedResourceData.equipmentStats.armor}</span>
                     </div>
                   )}
+                  {selectedResourceData.equipmentStats.armorType && (
+                    <div className="stat-row">
+                      <span className="stat-label">Armor Type:</span>
+                      <span className="stat-value">{selectedResourceData.equipmentStats.armorType.toUpperCase()}</span>
+                    </div>
+                  )}
+                  {selectedResourceData.equipmentStats.damageReductionPercent !== undefined && (
+                    <div className="stat-row">
+                      <span className="stat-label">Damage Reduction:</span>
+                      <span className="stat-value">+{selectedResourceData.equipmentStats.damageReductionPercent}%</span>
+                    </div>
+                  )}
                   <div className="stat-row">
                     <span className="stat-label">Attack Type:</span>
                     <span className="stat-value">{selectedResourceData.equipmentStats.attackType.toUpperCase()}</span>
@@ -261,6 +169,12 @@ export default function Inventory() {
                     <div className="stat-row">
                       <span className="stat-label">Crit Chance:</span>
                       <span className="stat-value">+{selectedResourceData.equipmentStats.critChance}%</span>
+                    </div>
+                  )}
+                  {selectedResourceData.equipmentStats.accuracyPercent !== undefined && (
+                    <div className="stat-row">
+                      <span className="stat-label">Accuracy %:</span>
+                      <span className="stat-value">+{selectedResourceData.equipmentStats.accuracyPercent}%</span>
                     </div>
                   )}
                 </div>

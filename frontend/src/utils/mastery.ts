@@ -181,11 +181,6 @@ export function getSkillMasterySpecialBonuses(skillId: string, masteryLevel: num
     bonuses.xpBonus = Math.floor(masteryLevel / 10) * 1
     // Every 5 levels: +0.5% respawn speed (reduces respawn time)
     bonuses.respawnSpeed = Math.floor(masteryLevel / 5) * 0.5
-  } else if (skillId === 'smelting') {
-    // Every 10 levels: +1% chance to not consume ingredients
-    bonuses.materialSave = Math.floor(masteryLevel / 10) * 1
-    // Every 5 levels: +0.5% XP bonus
-    bonuses.xpBonus = Math.floor(masteryLevel / 5) * 0.5
   }
   
   return bonuses

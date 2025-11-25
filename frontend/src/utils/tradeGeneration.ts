@@ -1,14 +1,11 @@
 import { Planet, PlanetTradeItem, PLANET_RESOURCE_POOLS } from '../types/planets'
-import { SALVAGING_RESOURCES, SALVAGING_RESOURCE_IMAGES } from '../types/salvagingResources'
-import { SMELTING_RECIPES } from '../types/smeltingResources'
-import { FOOD_RESOURCES } from '../types/foodResources'
-import { HERB_RESOURCES } from '../types/herbResources'
+import { getItemData, getItemImage } from '../types/items'
 
 // Resource metadata for trading
 interface ResourceMetadata {
   id: string
   name: string
-  icon: string
+  icon: string // Image path or placeholder
   baseValue: number
 }
 
@@ -16,48 +13,23 @@ interface ResourceMetadata {
 function getAllResourceMetadata(): Map<string, ResourceMetadata> {
   const resources = new Map<string, ResourceMetadata>()
 
-  // Add salvaging resources
-  SALVAGING_RESOURCES.forEach((resource) => {
-    // Use image path for salvaging resources, fallback to emoji if image not found
-    const imagePath = SALVAGING_RESOURCE_IMAGES[resource.id] || resource.icon || '📦'
-    resources.set(resource.id, {
-      id: resource.id,
-      name: resource.name,
-      icon: imagePath, // Store image path instead of emoji
-      baseValue: resource.value,
-    })
+  // Get all resource IDs from PLANET_RESOURCE_POOLS
+  const allResourceIds = new Set<string>()
+  Object.values(PLANET_RESOURCE_POOLS).forEach((pool) => {
+    pool.forEach((id) => allResourceIds.add(id))
   })
 
-  // Add smelting resources
-  SMELTING_RECIPES.forEach((recipe) => {
-    if (!resources.has(recipe.id)) {
-      resources.set(recipe.id, {
-        id: recipe.id,
-        name: recipe.name,
-        icon: recipe.icon || '⚙️',
-        baseValue: 100, // Default base value for smelted metals
+  // Build metadata map from centralized item system
+  allResourceIds.forEach((resourceId) => {
+    const item = getItemData(resourceId)
+    if (item) {
+      resources.set(resourceId, {
+        id: item.id,
+        name: item.name,
+        icon: getItemImage(resourceId), // Use centralized image getter
+        baseValue: item.value || 0,
       })
     }
-  })
-
-  // Add food resources
-  FOOD_RESOURCES.forEach((resource) => {
-    resources.set(resource.id, {
-      id: resource.id,
-      name: resource.name,
-      icon: resource.icon,
-      baseValue: resource.value,
-    })
-  })
-
-  // Add herb resources
-  HERB_RESOURCES.forEach((resource) => {
-    resources.set(resource.id, {
-      id: resource.id,
-      name: resource.name,
-      icon: resource.icon,
-      baseValue: resource.value,
-    })
   })
 
   return resources

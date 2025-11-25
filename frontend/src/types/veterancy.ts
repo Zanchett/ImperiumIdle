@@ -66,11 +66,6 @@ export function getSkillVeterancyBonus(skillId: string, level: number): SkillVet
     specialBonuses.xpBonus = Math.floor(level / 10) * 1
     // Every 5 levels: +0.5% respawn speed
     specialBonuses.respawnSpeed = Math.floor(level / 5) * 0.5
-  } else if (skillId === 'smelting') {
-    // Every 10 levels: +1% chance to not consume ingredients
-    specialBonuses.materialSave = Math.floor(level / 10) * 1
-    // Every 5 levels: +0.5% XP bonus
-    specialBonuses.xpBonus = Math.floor(level / 5) * 0.5
   }
   
   return {

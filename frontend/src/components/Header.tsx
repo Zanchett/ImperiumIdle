@@ -6,9 +6,11 @@ interface HeaderProps {
   gold: number
   resources: Record<string, number>
   playerName: string
+  onToggleSkillTree: () => void
+  skillTreeOpen: boolean
 }
 
-export default function Header({ gold, resources, playerName }: HeaderProps) {
+export default function Header({ gold, resources, playerName, onToggleSkillTree, skillTreeOpen }: HeaderProps) {
   const { logout, setInventoryOpen } = useGameStore()
 
   const handleLogout = () => {
@@ -43,6 +45,14 @@ export default function Header({ gold, resources, playerName }: HeaderProps) {
             {totalResources > 0 && (
               <span className="inventory-count">{totalResources}</span>
             )}
+          </button>
+          <button 
+            className={`skill-tree-button ${skillTreeOpen ? 'active' : ''}`}
+            onClick={onToggleSkillTree}
+            title="Toggle Skill Tree"
+          >
+            <span className="skill-tree-icon">🌳</span>
+            <span className="skill-tree-label">SKILL TREE</span>
           </button>
         </div>
       </div>

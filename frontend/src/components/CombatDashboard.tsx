@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useGameStore } from '../stores/gameStore'
 import { Enemy } from '../types/enemies'
 import { ENGINEERING_RECIPES, type EngineeringRecipe } from '../types/engineeringResources'
+import { getItemData, getItemImage } from '../types/items'
 import DeathPopup from './DeathPopup'
 import { getCumulativeExperience } from '../utils/experience'
 import { calculateMeleeDamage, rollDamage, type AttackType } from '../utils/combat'
@@ -97,10 +98,12 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
   // Calculate player stats from equipped items + sub-skill bonuses
   const calculatePlayerStats = () => {
     let baseDamage = 5 // Base damage without equipment
-    let totalArmor = 0
-    let totalAccuracy = 0 // Accuracy (a in hit chance formula)
+    let armorRating = 0 // Flat armor rating used in hit chance
+    let flatAccuracyBonus = 0 // Flat accuracy bonuses from gear
+    let accuracyPercentBonus = 0 // Percent-based accuracy bonuses
     let totalCritChance = 0
     let equippedWeapon: EngineeringRecipe | null = null
+    let damageReductionPercent = 0 // Percent mitigation from armor types
     
     // Track armor by style for affinity calculation
     let armorMelee = 0
@@ -108,22 +111,20 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
     let armorMagic = 0
     let armorHybrid = 0
     
-    // Base accuracy if no equipment
-    if (totalAccuracy === 0) {
-      totalAccuracy = 50 // Base accuracy
-    }
+    const baseAccuracy = 50
     
     // Ensure combatSubStats exists
     if (!combatSubStats) {
       return {
         attack: baseDamage,
-        defense: totalArmor,
+        defense: armorRating,
         health: playerMaxHealth,
-        accuracy: totalAccuracy,
+        accuracy: baseAccuracy,
         critChance: 0,
         critDamage: 150,
         attackSpeed: 4000,
         equippedWeapon: null,
+        damageReduction: 0,
         affinity: {
           melee: 55,
           ranged: 55,
@@ -134,15 +135,19 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
     
     // Sum stats from all equipped items
     Object.entries(equippedItems).forEach(([, itemId]) => {
-      const item = ENGINEERING_RECIPES.find(r => r.id === itemId)
+      const item = getItemData(itemId)
       if (item?.equipmentStats) {
         if (item.equipmentStats.damage) {
           baseDamage += item.equipmentStats.damage
-          equippedWeapon = item
+          // Get full engineering recipe for equippedWeapon if needed
+          const weaponRecipe = ENGINEERING_RECIPES.find(r => r.id === itemId)
+          if (weaponRecipe && weaponRecipe.equipmentStats) {
+            equippedWeapon = weaponRecipe
+          }
         }
         if (item.equipmentStats.armor) {
           const armorValue = item.equipmentStats.armor
-          totalArmor += armorValue
+          armorRating += armorValue
           
           // Track armor by style for affinity calculation
           const armorStyle = item.equipmentStats.armorStyle || 'melee' // Default to melee
@@ -156,8 +161,14 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
             armorHybrid += armorValue
           }
         }
+        if (item.equipmentStats.damageReductionPercent) {
+          damageReductionPercent += item.equipmentStats.damageReductionPercent
+        }
         if (item.equipmentStats.accuracy) {
-          totalAccuracy += item.equipmentStats.accuracy
+          flatAccuracyBonus += item.equipmentStats.accuracy
+        }
+        if (item.equipmentStats.accuracyPercent) {
+          accuracyPercentBonus += item.equipmentStats.accuracyPercent
         }
         if (item.equipmentStats.critChance) {
           totalCritChance += item.equipmentStats.critChance
@@ -169,8 +180,13 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
     // Attack: increases accuracy and crit chance
     const attackAccuracyBonus = (combatSubStats.attack?.level || 0) * 5 // +5 accuracy per level
     const attackCritBonus = (combatSubStats.attack?.level || 0) * 0.5 // +0.5% crit chance per level
-    totalAccuracy += attackAccuracyBonus
+    flatAccuracyBonus += attackAccuracyBonus
     totalCritChance += attackCritBonus
+    
+    let totalAccuracy = baseAccuracy + flatAccuracyBonus
+    if (accuracyPercentBonus !== 0) {
+      totalAccuracy *= 1 + (accuracyPercentBonus / 100)
+    }
     
     // Calculate damage using new formula system
     // Calculate max hit based on currently selected attack type for accurate stat display
@@ -178,9 +194,13 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
     // Get weapon stats safely
     let weaponDamage = 0
     let weaponPreferredType: AttackType | undefined = undefined
-    if (equippedWeapon && equippedWeapon.equipmentStats) {
-      weaponDamage = equippedWeapon.equipmentStats.damage ?? 0
-      weaponPreferredType = equippedWeapon.equipmentStats.attackType
+    if (equippedWeapon) {
+      const weapon = equippedWeapon as EngineeringRecipe
+      const weaponStats = weapon.equipmentStats
+      if (weaponStats) {
+        weaponDamage = weaponStats.damage ?? 0
+        weaponPreferredType = weaponStats.attackType
+      }
     }
     const damageCalculation = calculateMeleeDamage(
       strengthLevel,
@@ -201,7 +221,8 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
     
     // Defence: increases damage mitigation (armor)
     const defenceArmorBonus = (combatSubStats.defence?.level || 0) * 1 // +1 armor per level
-    const finalArmor = totalArmor + defenceArmorBonus
+    const finalArmor = armorRating + defenceArmorBonus
+    const finalDamageReduction = Math.max(0, Math.min(80, damageReductionPercent))
     
     // Calculate player affinity from equipped armor
     // Formula: Aff_Style = (45*A_Weak + 65*A_Strong + 55*A_Same + 55*A_Hybrid) / A_Worn
@@ -236,6 +257,7 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
       critDamage: baseCritDamage,
       attackSpeed: finalAttackSpeed,
       equippedWeapon: equippedWeapon as EngineeringRecipe | null,
+      damageReduction: finalDamageReduction,
       // Player affinity (affects enemy hit chance against player)
       affinity: {
         melee: Math.trunc(playerAffinityMelee),
@@ -1119,7 +1141,8 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
             // Defence skill provides % damage reduction
             const defenceMitigation = (combatSubStats?.defence?.level || 0) * 1 // +1% per level, capped at some max
             const armorReduction = Math.min(50, currentStats.defense * 2) // Each armor point = 2% reduction, cap at 50%
-            const totalMitigation = Math.min(75, defenceMitigation + armorReduction) // Cap total at 75%
+            const equipmentDamageReduction = currentStats.damageReduction || 0
+            const totalMitigation = Math.min(80, defenceMitigation + armorReduction + equipmentDamageReduction) // Cap total mitigation at 80%
             
             // Scale base damage by hit chance (damage potential)
             const baseDamage = Math.floor(attack.damage * enemyDamagePotential)
@@ -1584,6 +1607,12 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
                 <span className="stat-label">Defense:</span>
                 <span className="stat-value">{playerStats.defense}</span>
               </div>
+              {playerStats.damageReduction !== undefined && playerStats.damageReduction > 0 && (
+                <div className="stat-item">
+                  <span className="stat-label">Damage Red.:</span>
+                  <span className="stat-value">{playerStats.damageReduction.toFixed(1)}%</span>
+                </div>
+              )}
               {currentEnemy && (
                 <div className="stat-item">
                   <span className="stat-label">Hit Chance:</span>
@@ -1666,9 +1695,7 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
                     const placeholderImage = EQUIPMENT_SLOT_IMAGES[slotKey] || '/images/equipment/augment_equip.png'
                     
                     const equippedItemId = equippedItems[slotKey]
-                    const equippedItem = equippedItemId 
-                      ? ENGINEERING_RECIPES.find(r => r.id === equippedItemId)
-                      : null
+                    const equippedItem = equippedItemId ? getItemData(equippedItemId) : null
                     
                     return (
                       <div
@@ -1678,7 +1705,11 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
                         style={{ cursor: 'pointer' }}
                       >
                         {equippedItem ? (
-                          <span style={{ fontSize: '2rem' }}>{equippedItem.icon || '⚙️'}</span>
+                          <img 
+                            src={getItemImage(equippedItemId)}
+                            alt={equippedItem.name}
+                            style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+                          />
                         ) : (
                           <img 
                             src={placeholderImage} 
@@ -1707,9 +1738,11 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
                 style={{ cursor: 'pointer' }}
               >
                 {equippedItems['medical'] ? (
-                  <span style={{ fontSize: '2rem' }}>
-                    {ENGINEERING_RECIPES.find(r => r.id === equippedItems['medical'])?.icon || '⚙️'}
-                  </span>
+                  <img 
+                    src={getItemImage(equippedItems['medical'])}
+                    alt={getItemData(equippedItems['medical'])?.name || 'Medical'}
+                    style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+                  />
                 ) : (
                   <>
                     <img 
@@ -1729,9 +1762,11 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
                 style={{ cursor: 'pointer' }}
               >
                 {equippedItems['food'] ? (
-                  <span style={{ fontSize: '2rem' }}>
-                    {ENGINEERING_RECIPES.find(r => r.id === equippedItems['food'])?.icon || '⚙️'}
-                  </span>
+                  <img 
+                    src={getItemImage(equippedItems['food'])}
+                    alt={getItemData(equippedItems['food'])?.name || 'Food'}
+                    style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+                  />
                 ) : (
                   <>
                     <img 
@@ -1766,7 +1801,13 @@ export default function CombatDashboard({ skillId, selectedEnemy, combatActive, 
                         className="equipment-item-card"
                         onClick={() => handleEquipItem(item.id)}
                       >
-                        <div className="item-icon">{item.icon || '⚙️'}</div>
+                        <div className="item-icon">
+                          <img 
+                            src={getItemImage(item.id)}
+                            alt={item.name}
+                            style={{ width: '3rem', height: '3rem', objectFit: 'contain' }}
+                          />
+                        </div>
                         <div className="item-info">
                           <div className="item-name">{item.name}</div>
                           <div className="item-quantity">x{item.quantity}</div>

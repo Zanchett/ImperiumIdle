@@ -10,10 +10,10 @@ import MainContent from './components/MainContent'
 import LoginScreen from './components/LoginScreen'
 import Inventory from './components/Inventory'
 import BackgroundGathering from './components/BackgroundGathering'
-import BackgroundSmelting from './components/BackgroundSmelting'
 import BackgroundEngineering from './components/BackgroundEngineering'
 import NotificationToast from './components/NotificationToast'
 import CheatMenu from './components/CheatMenu' // CHEAT MENU - REMOVE BEFORE PRODUCTION
+import { SkillTree } from './components/SkillTree'
 
 function App() {
   const {
@@ -44,6 +44,7 @@ function App() {
   }
 
   const [checkingAuth, setCheckingAuth] = useState(true)
+  const [skillTreeOpen, setSkillTreeOpen] = useState(false)
 
   // Check if user is already authenticated on mount
   useEffect(() => {
@@ -133,7 +134,6 @@ function App() {
   return (
     <div className="app dataslate">
       {authenticated && <BackgroundGathering />}
-      {authenticated && <BackgroundSmelting />}
       {authenticated && <BackgroundEngineering />}
       <NotificationToast />
       {authenticated && <CheatMenu />} {/* CHEAT MENU - REMOVE BEFORE PRODUCTION */}
@@ -141,18 +141,26 @@ function App() {
         gold={gold}
         resources={resources}
         playerName={user?.username || 'GUARDSMAN'}
+        onToggleSkillTree={() => setSkillTreeOpen(!skillTreeOpen)}
+        skillTreeOpen={skillTreeOpen}
       />
       <div className="app-layout">
-        <Sidebar
-          categories={skillCategories}
-          selectedSkill={selectedSkill}
-          onSelectSkill={handleSelectSkill}
-          onToggleCategory={toggleCategory}
-        />
-        {inventoryOpen ? (
-          <Inventory />
+        {skillTreeOpen ? (
+          <SkillTree />
         ) : (
-          <MainContent skill={selectedSkill} />
+          <>
+            <Sidebar
+              categories={skillCategories}
+              selectedSkill={selectedSkill}
+              onSelectSkill={handleSelectSkill}
+              onToggleCategory={toggleCategory}
+            />
+            {inventoryOpen ? (
+              <Inventory />
+            ) : (
+              <MainContent skill={selectedSkill} />
+            )}
+          </>
         )}
       </div>
       {!connected && authenticated && (

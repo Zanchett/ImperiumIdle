@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../stores/gameStore'
 import { ENGINEERING_RECIPES } from '../types/engineeringResources'
+import { SMELTING_RECIPES } from '../types/smeltingResources'
 import { getSpeedBonus, getSkillVeterancySpecialBonuses } from '../utils/veterancy'
 
 /**
@@ -39,7 +40,10 @@ export default function BackgroundEngineering() {
     activeEngineeringTasks.forEach((task) => {
       if (task.completed) return
 
-      const recipe = ENGINEERING_RECIPES.find((r) => r.id === task.recipeId)
+      // Check both engineering recipes and smelting recipes
+      const engineeringRecipe = ENGINEERING_RECIPES.find((r) => r.id === task.recipeId)
+      const smeltingRecipe = SMELTING_RECIPES.find((r) => r.id === task.recipeId)
+      const recipe = engineeringRecipe || smeltingRecipe
       if (!recipe) return
 
       // Check if player has enough ingredients

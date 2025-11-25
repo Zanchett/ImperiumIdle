@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Skill } from '../types/skills'
-import { SALVAGING_RESOURCES, SalvagingResource, SALVAGING_RESOURCE_IMAGES } from '../types/salvagingResources'
+import { SALVAGING_RESOURCES, SalvagingResource } from '../types/salvagingResources'
 import { SMELTING_RECIPES, SmeltingRecipe } from '../types/smeltingResources'
 import { ENGINEERING_RECIPES, EngineeringRecipe } from '../types/engineeringResources'
+import { getItemImage, getItemData } from '../types/items'
 import { MEDICAE_RESEARCH_TOPICS, MedicaeResearchTopic } from '../types/medicaeResearch'
 import { MEDICAL_ITEMS } from '../types/medicalItems'
 import { getKnowledgeRarityColor } from '../utils/knowledgeRarity'
@@ -31,9 +32,6 @@ export default function MainContent({ skill }: MainContentProps) {
     resourceRespawns,
     resourceGatherCounts,
     setAutoResume,
-    startSmelting,
-    stopSmelting,
-    activeSmeltingTasks,
     startEngineering,
     stopEngineering,
     activeEngineeringTasks,
@@ -71,6 +69,8 @@ export default function MainContent({ skill }: MainContentProps) {
   const [itemHoverPosition, setItemHoverPosition] = useState({ x: 0, y: 0 })
   const [hoveredKnowledge, setHoveredKnowledge] = useState<{ rarity: number; dropChance: number } | null>(null)
   const [knowledgeHoverPosition, setKnowledgeHoverPosition] = useState({ x: 0, y: 0 })
+  const [hoveredIngredient, setHoveredIngredient] = useState<string | null>(null)
+  const [ingredientHoverPosition, setIngredientHoverPosition] = useState({ x: 0, y: 0 })
   const [medicaeTab, setMedicaeTab] = useState<'research' | 'skill-tree'>('research')
 
   // Update time every second to refresh timers
@@ -84,7 +84,6 @@ export default function MainContent({ skill }: MainContentProps) {
 
   // Determine skill types (do this early, before any early returns)
   const isSalvaging = skill?.id === 'salvaging'
-  const isSmelting = skill?.id === 'smelting'
   const isEngineering = skill?.id === 'engineering'
   const isCombat = skill?.id === 'bolter-training' || skill?.id === 'melee-combat'
   const isCommunication = skill?.id === 'communication'
@@ -92,13 +91,39 @@ export default function MainContent({ skill }: MainContentProps) {
   const isColony = skill?.id === 'colony'
   const isMedicae = skill?.id === 'medicae'
 
+  // Mapping of ingredient resourceIds to metal tab info
+  const METAL_TAB_MAPPING: Record<string, { tabNum: string; tabName: string }> = {
+    'ferrite-ingot': { tabNum: '1', tabName: 'Ferrite' },
+    'industrial-ingot': { tabNum: '2', tabName: 'Industrial' },
+    'placeholder-metal-3': { tabNum: '3', tabName: 'Placeholder Metal 3' },
+    'placeholder-metal-4': { tabNum: '4', tabName: 'Placeholder Metal 4' },
+    'placeholder-metal-5': { tabNum: '5', tabName: 'Placeholder Metal 5' },
+    'placeholder-metal-6': { tabNum: '6', tabName: 'Placeholder Metal 6' },
+    'placeholder-metal-7': { tabNum: '7', tabName: 'Placeholder Metal 7' },
+    'placeholder-metal-8': { tabNum: '8', tabName: 'Placeholder Metal 8' },
+    'placeholder-metal-9': { tabNum: '9', tabName: 'Placeholder Metal 9' },
+    'placeholder-metal-10': { tabNum: '10', tabName: 'Placeholder Metal 10' },
+    'placeholder-metal-11': { tabNum: '11', tabName: 'Placeholder Metal 11' },
+    'placeholder-metal-12': { tabNum: '12', tabName: 'Placeholder Metal 12' },
+    'placeholder-metal-13': { tabNum: '13', tabName: 'Placeholder Metal 13' },
+    'placeholder-metal-14': { tabNum: '14', tabName: 'Placeholder Metal 14' },
+    'placeholder-metal-15': { tabNum: '15', tabName: 'Placeholder Metal 15' },
+    'placeholder-metal-16': { tabNum: '16', tabName: 'Placeholder Metal 16' },
+    'placeholder-metal-17': { tabNum: '17', tabName: 'Placeholder Metal 17' },
+  }
+
   // For engineering, get unique metal types from recipes
   const getMetalTypes = () => {
     if (!isEngineering) return []
     const metalTypes = new Set<string>()
     ENGINEERING_RECIPES.forEach((recipe) => {
       recipe.ingredients.forEach((ing) => {
-        if (ing.resourceId.includes('placeholder-metal-')) {
+        // Check if ingredient is in our mapping
+        if (METAL_TAB_MAPPING[ing.resourceId]) {
+          metalTypes.add(METAL_TAB_MAPPING[ing.resourceId].tabNum)
+        }
+        // Fallback for old placeholder-metal- pattern
+        else if (ing.resourceId.includes('placeholder-metal-')) {
           const metalMatch = ing.resourceId.match(/placeholder-metal-(\d+)/)
           if (metalMatch) {
             metalTypes.add(metalMatch[1])
@@ -235,12 +260,6 @@ export default function MainContent({ skill }: MainContentProps) {
         }
       })
 
-      // Stop ALL smelting activities
-      activeSmeltingTasks.forEach((task) => {
-        if (!task.completed) {
-          stopSmelting(task.recipeId)
-        }
-      })
 
       // Ensure auto-resume is set BEFORE starting (creates entry if needed)
       setAutoResume(resource.id, true)
@@ -424,13 +443,7 @@ export default function MainContent({ skill }: MainContentProps) {
         }
       })
 
-      // Stop ALL smelting and engineering activities
-      activeSmeltingTasks.forEach((task) => {
-        if (!task.completed) {
-          stopSmelting(task.recipeId)
-        }
-      })
-
+      // Stop ALL engineering activities
       activeEngineeringTasks.forEach((task) => {
         if (!task.completed) {
           stopEngineering(task.recipeId)
@@ -612,6 +625,12 @@ export default function MainContent({ skill }: MainContentProps) {
     if (!isEngineering || !selectedMetalTab) return recipes
     return recipes.filter((recipe) => {
       return recipe.ingredients.some((ing) => {
+        // Check if ingredient maps to the selected tab
+        const metalInfo = METAL_TAB_MAPPING[ing.resourceId]
+        if (metalInfo && metalInfo.tabNum === selectedMetalTab) {
+          return true
+        }
+        // Fallback for old placeholder-metal- pattern
         if (ing.resourceId.includes('placeholder-metal-')) {
           const metalMatch = ing.resourceId.match(/placeholder-metal-(\d+)/)
           return metalMatch && metalMatch[1] === selectedMetalTab
@@ -723,7 +742,6 @@ export default function MainContent({ skill }: MainContentProps) {
 
   // Helper to check if a recipe is a raw material (smelting recipe or engineering metal crafting recipe)
   const isRawMaterial = (recipe: SmeltingRecipe | EngineeringRecipe): boolean => {
-    if (isSmelting) return true
     if (isEngineering) {
       // Check if it's a smelting recipe (by checking if it's in SMELTING_RECIPES)
       if (SMELTING_RECIPES.some((r) => r.id === recipe.id)) return true
@@ -740,9 +758,7 @@ export default function MainContent({ skill }: MainContentProps) {
     return [...smeltingRecipes, ...engineeringMetalCrafts]
   }
 
-  const availableRecipes = isSmelting
-    ? SMELTING_RECIPES.filter((recipe) => recipe.levelRequired <= skill.level)
-    : isEngineering
+  const availableRecipes = isEngineering
     ? (() => {
         if (engineeringTab === 'raw-materials') {
           return getRawMaterialRecipes().filter((recipe) => recipe.levelRequired <= skill.level)
@@ -756,9 +772,7 @@ export default function MainContent({ skill }: MainContentProps) {
       })()
     : []
 
-  const lockedRecipes = isSmelting
-    ? SMELTING_RECIPES.filter((recipe) => recipe.levelRequired > skill.level)
-    : isEngineering
+  const lockedRecipes = isEngineering
     ? (() => {
         if (engineeringTab === 'raw-materials') {
           return getRawMaterialRecipes().filter((recipe) => recipe.levelRequired > skill.level)
@@ -786,9 +800,8 @@ export default function MainContent({ skill }: MainContentProps) {
       setSelectedRecipe(recipe as EngineeringRecipe)
     }
     
-    const activeSmeltingTask = activeSmeltingTasks.find((t) => t.recipeId === recipe.id && !t.completed)
     const activeEngineeringTask = activeEngineeringTasks.find((t) => t.recipeId === recipe.id && !t.completed)
-    const isActive = !!activeSmeltingTask || !!activeEngineeringTask
+    const isActive = !!activeEngineeringTask
 
     // Only proceed with crafting if we can craft
     if (!canCraftRecipe(recipe) && !isActive) {
@@ -797,49 +810,19 @@ export default function MainContent({ skill }: MainContentProps) {
 
     if (isActive) {
       // Stop the active task
-      if (isEngineeringRecipe) {
-        stopEngineering(recipe.id)
-      } else {
-        stopSmelting(recipe.id)
-      }
+      stopEngineering(recipe.id)
     } else {
       // Check if we have ingredients
       if (!canCraftRecipe(recipe)) {
         return // Can't craft without ingredients
       }
 
-      // Stop ALL other active tasks first
-      if (isEngineeringRecipe) {
-        // Stop ALL other engineering tasks
-        activeEngineeringTasks.forEach((task) => {
-          if (task.recipeId !== recipe.id && !task.completed) {
-            stopEngineering(task.recipeId)
-          }
-        })
-      } else {
-        // Stop ALL other smelting tasks
-        activeSmeltingTasks.forEach((task) => {
-          if (task.recipeId !== recipe.id && !task.completed) {
-            stopSmelting(task.recipeId)
-          }
-        })
-      }
-
-      // Stop ALL other skill activities
-      if (!isEngineeringRecipe) {
-        activeEngineeringTasks.forEach((task) => {
-          if (!task.completed) {
-            stopEngineering(task.recipeId)
-          }
-        })
-      }
-      if (!isSmelting) {
-        activeSmeltingTasks.forEach((task) => {
-          if (!task.completed) {
-            stopSmelting(task.recipeId)
-          }
-        })
-      }
+      // Stop ALL other engineering tasks first
+      activeEngineeringTasks.forEach((task) => {
+        if (task.recipeId !== recipe.id && !task.completed) {
+          stopEngineering(task.recipeId)
+        }
+      })
 
       // Stop ALL salvaging activities
       resourceGatherCounts.forEach((gc) => {
@@ -855,19 +838,14 @@ export default function MainContent({ skill }: MainContentProps) {
       })
 
       // Apply speed bonus from skill veterancy
-      const skillId = isEngineeringRecipe ? 'engineering' : 'smelting'
-      const skillVeterancy = skillVeterancies.find((sv) => sv.skillId === skillId)
+      const skillVeterancy = skillVeterancies.find((sv) => sv.skillId === 'engineering')
       const skillVeterancyLevel = skillVeterancy?.level || 0
       const speedBonus = getSpeedBonus(skillVeterancyLevel)
       const baseDuration = recipe.time * 1000
       const duration = Math.floor(baseDuration * (1 - speedBonus / 100))
       
       // Start crafting this recipe
-      if (isEngineeringRecipe) {
-        startEngineering(recipe.id, duration, true) // Auto-resume enabled
-      } else {
-        startSmelting(recipe.id, duration, true) // Auto-resume enabled
-      }
+      startEngineering(recipe.id, duration, true) // Auto-resume enabled
     }
   }
 
@@ -892,7 +870,11 @@ export default function MainContent({ skill }: MainContentProps) {
   const renderRecipeCard = (recipe: SmeltingRecipe | EngineeringRecipe, isLocked: boolean) => {
     const isEngineeringRecipe = isEngineering && ENGINEERING_RECIPES.some((r) => r.id === recipe.id)
     const isEngineeringGear = isEngineering && engineeringTab === 'gear' && !recipe.id.endsWith('-craft')
-    const recipeImage = isEngineeringRecipe ? (recipe as EngineeringRecipe).image : null
+    const isRawMaterialsTab = isEngineering && engineeringTab === 'raw-materials'
+    // Check for image property in both EngineeringRecipe and SmeltingRecipe
+    const recipeImage = isEngineeringRecipe 
+      ? (recipe as EngineeringRecipe).image 
+      : (recipe as SmeltingRecipe).image || null
     const recipeIcon = recipe.icon || recipeImage || '⚙️'
     const isSelected = isEngineering && selectedRecipe?.id === recipe.id
     
@@ -915,9 +897,8 @@ export default function MainContent({ skill }: MainContentProps) {
       )
     }
 
-    const activeSmeltingTask = activeSmeltingTasks.find((t) => t.recipeId === recipe.id && !t.completed)
     const activeEngineeringTask = activeEngineeringTasks.find((t) => t.recipeId === recipe.id && !t.completed)
-    const activeTask = activeSmeltingTask || activeEngineeringTask
+    const activeTask = activeEngineeringTask
     const canCraft = canCraftRecipe(recipe)
     // Only show progress if task is active AND we still have ingredients
     const taskProgress = activeTask && canCraft ? getCraftingProgress(activeTask) : null
@@ -927,14 +908,18 @@ export default function MainContent({ skill }: MainContentProps) {
     // Get recipe veterancy
     const recipeVeterancy = resourceVeterancies.find((rv) => rv.resourceId === recipe.id)
 
-    // Use horizontal layout for engineering gear recipes
-    if (isEngineeringGear) {
+    // Use horizontal layout for engineering gear recipes and raw materials
+    if (isEngineeringGear || isRawMaterialsTab) {
       return (
         <div
           key={recipe.id}
           className={`resource-card available recipe-card-horizontal ${isActive ? 'active' : ''} ${!canCraft ? 'disabled' : ''} ${isSelected ? 'selected' : ''}`}
           onClick={() => {
-            setSelectedRecipe(recipe as EngineeringRecipe)
+            if (isEngineering) {
+              setSelectedRecipe(recipe as EngineeringRecipe)
+            } else {
+              handleRecipeClick(recipe)
+            }
           }}
           onMouseEnter={(e) => isEngineeringRecipe && handleRecipeMouseEnter(e, recipe as EngineeringRecipe)}
           onMouseLeave={handleRecipeMouseLeave}
@@ -963,15 +948,11 @@ export default function MainContent({ skill }: MainContentProps) {
             <div className="recipe-card-ingredients">
               {recipe.ingredients.map((ingredient, idx) => {
                 const hasIngredient = (resources[ingredient.resourceId] || 0) >= ingredient.amount
-                const resource = SALVAGING_RESOURCES.find((r) => r.id === ingredient.resourceId)
-                const ingredientImage = resource ? SALVAGING_RESOURCE_IMAGES[resource.id] : null
+                const ingredientImage = getItemImage(ingredient.resourceId)
+                const ingredientData = getItemData(ingredient.resourceId)
                 return (
                   <div key={idx} className={`ingredient-item ${hasIngredient ? '' : 'missing'}`}>
-                    {ingredientImage ? (
-                      <img src={ingredientImage} alt={resource?.name || 'Ingredient'} style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} />
-                    ) : (
-                      <span style={{ fontSize: '1.25rem' }}>{resource?.icon || '⚙️'}</span>
-                    )}
+                    <img src={ingredientImage} alt={ingredientData?.name || 'Ingredient'} style={{ width: '1.25rem', height: '1.25rem', objectFit: 'contain' }} />
                     <span>{ingredient.amount}x</span>
                   </div>
                 )
@@ -1013,7 +994,7 @@ export default function MainContent({ skill }: MainContentProps) {
       )
     }
 
-    // Vertical layout for smelting and raw materials
+    // Vertical layout for raw materials
     return (
       <div
         key={recipe.id}
@@ -1069,15 +1050,10 @@ export default function MainContent({ skill }: MainContentProps) {
         <div className="recipe-ingredients">
           {recipe.ingredients.map((ingredient, idx) => {
             const hasIngredient = (resources[ingredient.resourceId] || 0) >= ingredient.amount
-            const resource = SALVAGING_RESOURCES.find((r) => r.id === ingredient.resourceId)
-            const ingredientImage = resource ? SALVAGING_RESOURCE_IMAGES[resource.id] : null
+            const ingredientImage = getItemImage(ingredient.resourceId)
             return (
               <div key={idx} className={`ingredient-item ${hasIngredient ? '' : 'missing'}`}>
-                {ingredientImage ? (
-                  <img src={ingredientImage} alt={resource?.name || 'Ingredient'} style={{ width: '1rem', height: '1rem', objectFit: 'contain' }} />
-                ) : (
-                  <span>{resource?.icon || '⚙️'}</span>
-                )}
+                <img src={ingredientImage} alt={ingredient.resourceId} style={{ width: '1rem', height: '1rem', objectFit: 'contain' }} />
                 <span>{ingredient.amount}x</span>
               </div>
             )
@@ -1134,9 +1110,11 @@ export default function MainContent({ skill }: MainContentProps) {
     const canCraft = canCraftRecipe(selectedRecipe)
     const hasResult = (resources[selectedRecipe.id] || 0) > 0
     const recipeVeterancy = resourceVeterancies.find((rv) => rv.resourceId === selectedRecipe.id)
-    const skillId = isEngineering ? 'engineering' : 'smelting'
-    const skillVeterancy = skillVeterancies.find((sv) => sv.skillId === skillId)
-    const recipeImage = isEngineering ? (selectedRecipe as EngineeringRecipe).image : null
+    const skillVeterancy = skillVeterancies.find((sv) => sv.skillId === 'engineering')
+    // Check for image property in both EngineeringRecipe and SmeltingRecipe
+    const recipeImage = isEngineering 
+      ? (selectedRecipe as EngineeringRecipe).image 
+      : (selectedRecipe as SmeltingRecipe).image || null
     const recipeIcon = selectedRecipe.icon || recipeImage || '⚙️'
 
     return (
@@ -1169,21 +1147,26 @@ export default function MainContent({ skill }: MainContentProps) {
               <div className="recipe-detail-ingredients">
                 {selectedRecipe.ingredients.map((ingredient, idx) => {
                   const hasIngredient = (resources[ingredient.resourceId] || 0) >= ingredient.amount
-                  const resource = SALVAGING_RESOURCES.find((r) => r.id === ingredient.resourceId)
-                  const ingredientImage = resource ? SALVAGING_RESOURCE_IMAGES[resource.id] : null
+                  const ingredientImage = getItemImage(ingredient.resourceId)
+                  const ingredientData = getItemData(ingredient.resourceId)
                   const hasAmount = (resources[ingredient.resourceId] || 0)
                   return (
                     <div key={idx} className="recipe-detail-ingredient-row">
                       <div 
                         className={`recipe-detail-ingredient-box ${hasIngredient ? '' : 'missing'}`}
-                        title={resource?.name || ingredient.resourceId}
+                        onMouseEnter={(e) => {
+                          setHoveredIngredient(ingredient.resourceId)
+                          setIngredientHoverPosition({ x: e.clientX, y: e.clientY })
+                        }}
+                        onMouseLeave={() => setHoveredIngredient(null)}
+                        onMouseMove={(e) => {
+                          if (hoveredIngredient === ingredient.resourceId) {
+                            setIngredientHoverPosition({ x: e.clientX, y: e.clientY })
+                          }
+                        }}
                       >
                         <div className="recipe-detail-ingredient-icon">
-                          {ingredientImage ? (
-                            <img src={ingredientImage} alt={resource?.name || 'Ingredient'} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                          ) : (
-                            resource?.icon || '⚙️'
-                          )}
+                          <img src={ingredientImage} alt={ingredientData?.name || 'Ingredient'} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
                         <div className="recipe-detail-ingredient-quantity">{ingredient.amount}x</div>
                       </div>
@@ -1284,15 +1267,11 @@ export default function MainContent({ skill }: MainContentProps) {
         <div className="resource-header">
           <div className="resource-header-left">
             <span className="resource-header-icon">
-              {SALVAGING_RESOURCE_IMAGES[resource.id] ? (
-                <img 
-                  src={SALVAGING_RESOURCE_IMAGES[resource.id]}
-                  alt={resource.name}
-                  style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }}
-                />
-              ) : (
-                resource.icon || '⚙️'
-              )}
+              <img 
+                src={getItemImage(resource.id)}
+                alt={resource.name}
+                style={{ width: '1.5rem', height: '1.5rem', objectFit: 'contain' }}
+              />
             </span>
             <div className="resource-name-wrapper">
               <span className="resource-name">{resource.name}</span>
@@ -1314,15 +1293,11 @@ export default function MainContent({ skill }: MainContentProps) {
         {/* Central Icon */}
         <div className="resource-icon-center">
           <span className="resource-large-icon">
-            {SALVAGING_RESOURCE_IMAGES[resource.id] ? (
-              <img 
-                src={SALVAGING_RESOURCE_IMAGES[resource.id]}
-                alt={resource.name}
-                style={{ width: '4rem', height: '4rem', objectFit: 'contain' }}
-              />
-            ) : (
-              resource.icon || '⚙️'
-            )}
+            <img 
+              src={getItemImage(resource.id)}
+              alt={resource.name}
+              style={{ width: '4rem', height: '4rem', objectFit: 'contain' }}
+            />
           </span>
         </div>
 
@@ -1521,7 +1496,7 @@ export default function MainContent({ skill }: MainContentProps) {
               </div>
             )}
           </>
-        ) : (isSmelting || isEngineering) ? (
+        ) : isEngineering ? (
           <>
             {/* Engineering Tab Switcher */}
             {isEngineering && (
@@ -1553,15 +1528,21 @@ export default function MainContent({ skill }: MainContentProps) {
             {isEngineering && engineeringTab === 'gear' && metalTypes.length > 0 && (
               <div className="metal-tabs-container">
                 <div className="metal-tabs">
-                  {metalTypes.map((metalNum) => (
-                    <button
-                      key={metalNum}
-                      className={`metal-tab ${selectedMetalTab === metalNum ? 'active' : ''}`}
-                      onClick={() => setSelectedMetalTab(metalNum)}
-                    >
-                      Placeholder Metal {metalNum}
-                    </button>
-                  ))}
+                  {metalTypes.map((metalNum) => {
+                    // Find the tab name from mapping
+                    const tabInfo = Object.values(METAL_TAB_MAPPING).find(m => m.tabNum === metalNum)
+                    const tabName = tabInfo?.tabName || `Placeholder Metal ${metalNum}`
+                    
+                    return (
+                      <button
+                        key={metalNum}
+                        className={`metal-tab ${selectedMetalTab === metalNum ? 'active' : ''}`}
+                        onClick={() => setSelectedMetalTab(metalNum)}
+                      >
+                        {tabName}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -1678,7 +1659,7 @@ export default function MainContent({ skill }: MainContentProps) {
                 <h3>Example Bonuses</h3>
                 <ul>
                   <li><strong>Salvaging:</strong> XP bonus every 10 levels, respawn speed every 5 levels</li>
-                  <li><strong>Smelting:</strong> Material save chance every 10 levels, XP bonus every 5 levels</li>
+                  <li><strong>Engineering:</strong> Material save chance every 10 levels, XP bonus every 5 levels</li>
                 </ul>
               </div>
             </div>
@@ -1771,6 +1752,18 @@ export default function MainContent({ skill }: MainContentProps) {
                 <span className="tooltip-value">{hoveredRecipe.equipmentStats.armor}</span>
               </div>
             )}
+            {hoveredRecipe.equipmentStats.armorType && (
+              <div className="tooltip-stat">
+                <span className="tooltip-label">Armor Type:</span>
+                <span className="tooltip-value">{hoveredRecipe.equipmentStats.armorType.toUpperCase()}</span>
+              </div>
+            )}
+            {hoveredRecipe.equipmentStats.damageReductionPercent !== undefined && (
+              <div className="tooltip-stat">
+                <span className="tooltip-label">Damage Reduction:</span>
+                <span className="tooltip-value">+{hoveredRecipe.equipmentStats.damageReductionPercent}%</span>
+              </div>
+            )}
             <div className="tooltip-stat">
               <span className="tooltip-label">Attack Type:</span>
               <span className="tooltip-value">{hoveredRecipe.equipmentStats.attackType.toUpperCase()}</span>
@@ -1785,6 +1778,12 @@ export default function MainContent({ skill }: MainContentProps) {
                 <span className="tooltip-value">+{hoveredRecipe.equipmentStats.accuracy}</span>
               </div>
             )}
+            {hoveredRecipe.equipmentStats.accuracyPercent !== undefined && (
+              <div className="tooltip-stat">
+                <span className="tooltip-label">Accuracy %:</span>
+                <span className="tooltip-value">+{hoveredRecipe.equipmentStats.accuracyPercent}%</span>
+              </div>
+            )}
             {hoveredRecipe.equipmentStats.critChance !== undefined && (
               <div className="tooltip-stat">
                 <span className="tooltip-label">Crit Chance:</span>
@@ -1794,6 +1793,60 @@ export default function MainContent({ skill }: MainContentProps) {
           </div>
         </div>
       )}
+
+      {/* Ingredient tooltip in detail panel */}
+      {hoveredIngredient && (() => {
+        const ingredientData = getItemData(hoveredIngredient)
+        if (!ingredientData) return null
+        
+        const ownedAmount = resources[hoveredIngredient] || 0
+        
+        return (
+          <div
+            className="equipment-stats-tooltip"
+            style={{
+              position: 'fixed',
+              left: `${ingredientHoverPosition.x + 15}px`,
+              top: `${ingredientHoverPosition.y + 15}px`,
+              zIndex: 10000,
+            }}
+          >
+            <div className="tooltip-header">
+              <span className="tooltip-icon">
+                <img src={getItemImage(hoveredIngredient)} alt={ingredientData.name} style={{ width: '1.2rem', height: '1.2rem', objectFit: 'contain', marginRight: '0.5rem' }} />
+              </span>
+              <span className="tooltip-title">{ingredientData.name}</span>
+            </div>
+            <div className="tooltip-content">
+              {ingredientData.description && (
+                <div className="tooltip-description">{ingredientData.description}</div>
+              )}
+              {ingredientData.value > 0 && (
+                <div className="tooltip-stat">
+                  <span className="tooltip-label">Value:</span>
+                  <span className="tooltip-value">{ingredientData.value.toLocaleString()} gold</span>
+                </div>
+              )}
+              <div className="tooltip-stat">
+                <span className="tooltip-label">Owned:</span>
+                <span className="tooltip-value">{ownedAmount.toLocaleString()}</span>
+              </div>
+              {ingredientData.category && (
+                <div className="tooltip-stat">
+                  <span className="tooltip-label">Category:</span>
+                  <span className="tooltip-value">{ingredientData.category.toUpperCase()}</span>
+                </div>
+              )}
+              {ingredientData.levelRequired && (
+                <div className="tooltip-stat">
+                  <span className="tooltip-label">Level Required:</span>
+                  <span className="tooltip-value">{ingredientData.levelRequired}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
       </div>
       {renderBackgroundCombat()}
     </>

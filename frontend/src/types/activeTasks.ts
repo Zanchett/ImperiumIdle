@@ -16,14 +16,6 @@ export interface ResourceGatherCount {
   autoResume: boolean // Should auto-resume when respawn completes
 }
 
-export interface ActiveSmeltingTask {
-  recipeId: string
-  startTime: number // Timestamp when task started
-  duration: number // Total duration in milliseconds
-  completed: boolean
-  autoResume: boolean // Should auto-resume when completed
-}
-
 export interface ActiveEngineeringTask {
   recipeId: string
   startTime: number // Timestamp when task started

@@ -1,0 +1,196 @@
+.skill-tree-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.95);
+  color: #cccccc;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+}
+
+.skill-tree-header {
+  padding: 1rem;
+  background: linear-gradient(135deg, #1a0000 0%, #330000 100%);
+  border-bottom: 2px solid #8b0000;
+  box-shadow: inset 0 -2px 10px rgba(139, 0, 0, 0.3);
+}
+
+.skill-tree-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: #ff6b6b;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+  text-transform: uppercase;
+}
+
+.skill-tree-header p {
+  margin: 0;
+  color: #cccccc;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+
+.skill-tree-view {
+  flex: 1;
+  min-height: 600px;
+  background: rgba(0, 0, 0, 0.95);
+}
+
+/* Custom skill node styling - Rounded squares */
+.skill-node {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
+  border: 2px solid #8b0000;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 0 10px rgba(139, 0, 0, 0.3),
+    inset 0 0 10px rgba(139, 0, 0, 0.1);
+}
+
+.skill-node.locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: #4b0000;
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: none;
+}
+
+.skill-node.available {
+  border-color: #ff6b6b;
+  background: rgba(26, 0, 0, 0.9);
+  box-shadow: 
+    0 0 15px rgba(255, 107, 107, 0.4),
+    inset 0 0 15px rgba(255, 107, 107, 0.1);
+}
+
+.skill-node.available:hover {
+  transform: scale(1.1);
+  border-color: #ff8e8e;
+  box-shadow: 
+    0 0 25px rgba(255, 107, 107, 0.6),
+    inset 0 0 20px rgba(255, 107, 107, 0.2);
+}
+
+.skill-node.unlocked {
+  border-color: #ff6b6b;
+  background: linear-gradient(135deg, rgba(139, 0, 0, 0.4) 0%, rgba(204, 0, 0, 0.3) 100%);
+  box-shadow: 
+    0 0 20px rgba(255, 107, 107, 0.5),
+    inset 0 0 20px rgba(255, 107, 107, 0.2);
+}
+
+.skill-node-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.skill-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 3px rgba(255, 107, 107, 0.5));
+}
+
+.skill-name {
+  font-size: 0.65rem;
+  text-align: center;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #cccccc;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 5px rgba(255, 107, 107, 0.3);
+}
+
+.skill-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #cc0000 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border: 2px solid #000;
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.6);
+}
+
+/* React Flow styling overrides */
+.react-flow {
+  background: rgba(0, 0, 0, 0.95);
+}
+
+.react-flow__node {
+  background: transparent;
+}
+
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  background: #8b0000;
+  border: 2px solid #000;
+  border-radius: 4px;
+}
+
+.react-flow__handle-top {
+  top: -5px;
+}
+
+.react-flow__handle-bottom {
+  bottom: -5px;
+}
+
+.react-flow__controls {
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #8b0000;
+  box-shadow: 0 0 10px rgba(139, 0, 0, 0.3);
+}
+
+.react-flow__controls-button {
+  background: rgba(26, 0, 0, 0.8);
+  border-bottom: 1px solid rgba(139, 0, 0, 0.5);
+  color: #ff6b6b;
+  transition: all 0.2s;
+}
+
+.react-flow__controls-button:hover {
+  background: rgba(139, 0, 0, 0.3);
+  color: #ff8e8e;
+}
+
+.react-flow__minimap {
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #8b0000;
+  box-shadow: 0 0 10px rgba(139, 0, 0, 0.3);
+}
+
+.react-flow__minimap-mask {
+  fill: rgba(139, 0, 0, 0.2);
+}
+
+.react-flow__minimap-node {
+  fill: rgba(255, 107, 107, 0.3);
+  stroke: #8b0000;
+}
+

@@ -2,13 +2,14 @@ export interface FoodResource {
   id: string
   name: string
   levelRequired: number
-  icon: string
+  icon?: string // Optional emoji icon (fallback if no image)
+  image?: string // Image path for the food resource
   value: number // Gold value
   description: string
 }
 
 export const FOOD_RESOURCES: FoodResource[] = [
-  { id: 'apples', name: 'Apples', levelRequired: 1, icon: '🍎', value: 10, description: 'Fresh crisp apples from Imperial orchards' },
+  { id: 'apples', name: 'Apples', levelRequired: 1, image: '/images/food/apples.png', value: 10, description: 'Fresh crisp apples from Imperial orchards' },
   { id: 'oranges', name: 'Oranges', levelRequired: 5, icon: '🍊', value: 15, description: 'Juicy citrus fruits rich in vitamins' },
   { id: 'wheat', name: 'Wheat', levelRequired: 10, icon: '🌾', value: 25, description: 'Golden grain essential for bread production' },
   { id: 'corn', name: 'Corn', levelRequired: 15, icon: '🌽', value: 30, description: 'Sweet yellow kernels from agri-worlds' },

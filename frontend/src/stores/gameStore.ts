@@ -13,7 +13,7 @@ interface User {
   }
 }
 
-import { ActiveSalvagingTask, ResourceRespawn, ResourceGatherCount, ActiveSmeltingTask, ActiveEngineeringTask, ActiveMedicaeResearchTask } from '../types/activeTasks'
+import { ActiveSalvagingTask, ResourceRespawn, ResourceGatherCount, ActiveEngineeringTask, ActiveMedicaeResearchTask } from '../types/activeTasks'
 import { Notification } from '../types/notifications'
 import { ResourceVeterancy, SkillVeterancy, VETERANCY_CONFIG } from '../types/veterancy'
 import { Planet, ActiveContactTask } from '../types/planets'
@@ -43,7 +43,6 @@ interface GameState {
   activeSalvagingTasks: ActiveSalvagingTask[]
   resourceRespawns: ResourceRespawn[]
   resourceGatherCounts: ResourceGatherCount[]
-  activeSmeltingTasks: ActiveSmeltingTask[]
   activeEngineeringTasks: ActiveEngineeringTask[]
   activeMedicaeResearchTasks: ActiveMedicaeResearchTask[]
   knowledgePoints: number
@@ -66,9 +65,6 @@ interface GameState {
   addSkillVeterancyXP: (skillId: string, amount: number) => void
   addCombatSubStatXP: (statType: 'strength' | 'attack' | 'defence' | 'agility', amount: number) => void
   convertSkillVeterancyToResource: (skillId: string, resourceId: string, amount: number) => void
-  startSmelting: (recipeId: string, duration: number, autoResume: boolean) => void
-  completeSmeltingTask: (recipeId: string) => void
-  stopSmelting: (recipeId: string) => void
   activeEngineeringTasks: ActiveEngineeringTask[]
   startEngineering: (recipeId: string, duration: number, autoResume: boolean) => void
   completeEngineeringTask: (recipeId: string) => void
@@ -141,7 +137,6 @@ export const useGameStore = create<GameState>((set) => ({
   activeSalvagingTasks: [],
   resourceRespawns: [],
   resourceGatherCounts: [],
-  activeSmeltingTasks: [],
   activeEngineeringTasks: [],
   activeMedicaeResearchTasks: [],
   knowledgePoints: 0,
@@ -563,29 +558,6 @@ export const useGameStore = create<GameState>((set) => ({
       return set((state) => state) // Return unchanged state on error
     }
   },
-  startSmelting: (recipeId: string, duration: number, autoResume: boolean) =>
-    set((state) => ({
-      activeSmeltingTasks: [
-        ...state.activeSmeltingTasks,
-        {
-          recipeId,
-          startTime: Date.now(),
-          duration,
-          completed: false,
-          autoResume,
-        },
-      ],
-    })),
-  completeSmeltingTask: (recipeId: string) =>
-    set((state) => ({
-      activeSmeltingTasks: state.activeSmeltingTasks.filter((task) => task.recipeId !== recipeId),
-    })),
-  stopSmelting: (recipeId: string) =>
-    set((state) => ({
-      activeSmeltingTasks: state.activeSmeltingTasks.filter(
-        (task) => task.recipeId !== recipeId || task.completed
-      ),
-    })),
   startEngineering: (recipeId: string, duration: number, autoResume: boolean) =>
     set((state) => ({
       activeEngineeringTasks: [

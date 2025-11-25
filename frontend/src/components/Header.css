@@ -141,6 +141,43 @@
   font-weight: bold;
 }
 
+.skill-tree-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(139, 0, 0, 0.5);
+  border-radius: 4px;
+  color: #ff6b6b;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.skill-tree-button:hover {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(139, 0, 0, 0.8);
+  color: #ff8e8e;
+}
+
+.skill-tree-button.active {
+  background: rgba(139, 0, 0, 0.3);
+  border-color: rgba(139, 0, 0, 0.8);
+  color: #ff8e8e;
+}
+
+.skill-tree-icon {
+  font-size: 1.1rem;
+}
+
+.skill-tree-label {
+  font-weight: bold;
+}
+
 .header-right {
   flex: 1;
   display: flex;

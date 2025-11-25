@@ -181,11 +181,6 @@ export function getSkillVeterancySpecialBonuses(skillId: string, veterancyLevel:
     bonuses.xpBonus = Math.floor(veterancyLevel / 10) * 1
     // Every 5 levels: +0.5% respawn speed (reduces respawn time)
     bonuses.respawnSpeed = Math.floor(veterancyLevel / 5) * 0.5
-  } else if (skillId === 'smelting') {
-    // Every 10 levels: +1% chance to not consume ingredients
-    bonuses.materialSave = Math.floor(veterancyLevel / 10) * 1
-    // Every 5 levels: +0.5% XP bonus
-    bonuses.xpBonus = Math.floor(veterancyLevel / 5) * 0.5
   } else if (skillId === 'engineering') {
     // Every 10 levels: +1% chance to not consume ingredients
     bonuses.materialSave = Math.floor(veterancyLevel / 10) * 1

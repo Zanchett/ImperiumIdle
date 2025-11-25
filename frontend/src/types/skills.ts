@@ -141,17 +141,6 @@ export const SKILL_CATEGORIES: SkillCategoryData[] = [
         description: 'Recover valuable materials from wreckage and debris.',
       },
       {
-        id: 'smelting',
-        name: 'Smelting',
-        category: 'NON-COMBAT PROTOCOLS',
-        icon: '🔥',
-        level: 1,
-        experience: 0,
-        experienceToNext: getExperienceForLevel(2),
-        mastery: 0,
-        description: 'Refine salvaged materials into valuable metals and alloys.',
-      },
-      {
         id: 'engineering',
         name: 'Engineering',
         category: 'NON-COMBAT PROTOCOLS',

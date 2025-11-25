@@ -4,6 +4,7 @@ export interface SmeltingRecipe {
   levelRequired: number
   xpReward: number
   icon?: string
+  image?: string // Image path for the recipe
   description: string
   ingredients: {
     resourceId: string
@@ -14,23 +15,24 @@ export interface SmeltingRecipe {
 
 export const SMELTING_RECIPES: SmeltingRecipe[] = [
   {
-    id: 'placeholder-metal-1',
-    name: 'Placeholder Metal 1',
+    id: 'ferrite-ingot',
+    name: 'Ferrite Ingot',
     levelRequired: 1,
     xpReward: 5,
-    icon: '🔩',
+    image: '/images/resources/ferrite_ingot.png',
     description: 'Basic smelted metal',
     ingredients: [
       { resourceId: 'ferrite-ore', amount: 2 },
+      { resourceId: 'roughsteel-scrap', amount: 4 },
     ],
     time: 2,
   },
   {
-    id: 'placeholder-metal-2',
-    name: 'Placeholder Metal 2',
+    id: 'industrial-ingot',
+    name: 'Industrial Ingot',
     levelRequired: 20,
     xpReward: 8,
-    icon: '⚙️',
+    image: '/images/resources/industrial_ingot.png',
     description: 'Reinforced smelted metal',
     ingredients: [
       { resourceId: 'plasteel-shards', amount: 1 },
@@ -43,7 +45,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 3',
     levelRequired: 40,
     xpReward: 12,
-    icon: '🛡️',
+    image: '/images/resources/augment_equip.png',
     description: 'Hardened metal alloy',
     ingredients: [
       { resourceId: 'scrap-metal', amount: 3 },
@@ -56,7 +58,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 4',
     levelRequired: 55,
     xpReward: 15,
-    icon: '💎',
+    image: '/images/resources/augment_equip.png',
     description: 'Refined ceramite alloy',
     ingredients: [
       { resourceId: 'ceramite-plates', amount: 1 },
@@ -69,7 +71,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 5',
     levelRequired: 40,
     xpReward: 35,
-    icon: '⚡',
+    image: '/images/resources/augment_equip.png',
     description: 'Energy-infused metal',
     ingredients: [
       { resourceId: 'promethium-cells', amount: 2 },
@@ -82,7 +84,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 6',
     levelRequired: 40,
     xpReward: 20,
-    icon: '🔋',
+    image: '/images/resources/augment_equip.png',
     description: 'Adamantium alloy',
     ingredients: [
       { resourceId: 'adamantium-ore', amount: 1 },
@@ -95,7 +97,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 7',
     levelRequired: 40,
     xpReward: 40,
-    icon: '🤖',
+    image: '/images/resources/augment_equip.png',
     description: 'Cogitator-enhanced metal',
     ingredients: [
       { resourceId: 'machine-spirits', amount: 1 },
@@ -108,7 +110,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 8',
     levelRequired: 55,
     xpReward: 42,
-    icon: '📻',
+    image: '/images/resources/augment_equip.png',
     description: 'Communication-enhanced alloy',
     ingredients: [
       { resourceId: 'vox-units', amount: 1 },
@@ -121,7 +123,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 9',
     levelRequired: 70,
     xpReward: 50,
-    icon: '📡',
+    image: '/images/resources/augment_equip.png',
     description: 'Sensor-enhanced metal',
     ingredients: [
       { resourceId: 'auspex-scanners', amount: 1 },
@@ -134,7 +136,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 10',
     levelRequired: 80,
     xpReward: 180,
-    icon: '🌀',
+    image: '/images/resources/augment_equip.png',
     description: 'Plasma-forged alloy',
     ingredients: [
       { resourceId: 'plasma-coils', amount: 1 },
@@ -148,7 +150,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 11',
     levelRequired: 85,
     xpReward: 60,
-    icon: '⚛️',
+    image: '/images/resources/augment_equip.png',
     description: 'Archeotech-infused metal',
     ingredients: [
       { resourceId: 'archeotech-fragments', amount: 1 },
@@ -162,7 +164,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 12',
     levelRequired: 100,
     xpReward: 85,
-    icon: '🧬',
+    image: '/images/resources/augment_equip.png',
     description: 'Gene-seed enhanced alloy',
     ingredients: [
       { resourceId: 'gene-seed', amount: 1 },
@@ -175,7 +177,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 13',
     levelRequired: 100,
     xpReward: 119,
-    icon: '🌌',
+    image: '/images/resources/augment_equip.png',
     description: 'Warp-infused metal',
     ingredients: [
       { resourceId: 'warp-cores', amount: 1 },
@@ -188,7 +190,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 14',
     levelRequired: 105,
     xpReward: 110,
-    icon: '👑',
+    image: '/images/resources/augment_equip.png',
     description: 'Emperor-blessed alloy',
     ingredients: [
       { resourceId: 'emperor-relics', amount: 1 },
@@ -202,7 +204,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 15',
     levelRequired: 108,
     xpReward: 161,
-    icon: '😈',
+    image: '/images/resources/augment_equip.png',
     description: 'Chaos-tainted metal',
     ingredients: [
       { resourceId: 'chaos-artifacts', amount: 1 },
@@ -215,7 +217,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 16',
     levelRequired: 110,
     xpReward: 178,
-    icon: '🤖',
+    image: '/images/resources/augment_equip.png',
     description: 'Necron-alloy',
     ingredients: [
       { resourceId: 'necron-technology', amount: 1 },
@@ -228,7 +230,7 @@ export const SMELTING_RECIPES: SmeltingRecipe[] = [
     name: 'Placeholder Metal 17',
     levelRequired: 115,
     xpReward: 212,
-    icon: '🦠',
+    image: '/images/resources/augment_equip.png',
     description: 'Tyranid-biological alloy',
     ingredients: [
       { resourceId: 'tyranid-biomass', amount: 1 },
