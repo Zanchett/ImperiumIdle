@@ -196,7 +196,7 @@
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.6);
   margin-top: 0.5rem;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .rotation-info {
@@ -240,7 +240,7 @@
   color: rgba(255, 255, 255, 0.6);
   font-size: 0.75rem;
   margin: 0;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .trade-split-view {
@@ -350,7 +350,7 @@
   margin: 0;
   font-weight: bold;
   text-shadow: 0 0 3px rgba(255, 179, 71, 0.5);
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .trade-item-body {
@@ -363,7 +363,7 @@
   color: rgba(255, 255, 255, 0.6);
   font-size: 0.7rem;
   margin: 0;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .profit-indicator {
@@ -371,7 +371,7 @@
   font-size: 0.75rem;
   margin: 0;
   font-weight: bold;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .trade-controls {
@@ -387,7 +387,7 @@
   border: 1px solid rgba(139, 0, 0, 0.3);
   border-radius: 3px;
   color: #ffb347;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
   text-align: center;
   font-size: 0.75rem;
 }
@@ -402,7 +402,7 @@
   flex: 1;
   color: #ffb347;
   font-weight: bold;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
   font-size: 0.75rem;
 }
 

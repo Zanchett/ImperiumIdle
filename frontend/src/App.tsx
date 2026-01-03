@@ -141,7 +141,9 @@ function App() {
         gold={gold}
         resources={resources}
         playerName={user?.username || 'GUARDSMAN'}
-        onToggleSkillTree={() => setSkillTreeOpen(!skillTreeOpen)}
+        onToggleSkillTree={() => {
+          setSkillTreeOpen(!skillTreeOpen)
+        }}
         skillTreeOpen={skillTreeOpen}
       />
       <div className="app-layout">

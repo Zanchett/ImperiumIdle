@@ -14,6 +14,7 @@ interface User {
 }
 
 import { ActiveSalvagingTask, ResourceRespawn, ResourceGatherCount, ActiveEngineeringTask, ActiveMedicaeResearchTask } from '../types/activeTasks'
+import { FarmingPlot } from '../types/farming'
 import { Notification } from '../types/notifications'
 import { ResourceVeterancy, SkillVeterancy, VETERANCY_CONFIG } from '../types/veterancy'
 import { Planet, ActiveContactTask } from '../types/planets'
@@ -28,6 +29,8 @@ import {
   getSkillVeterancyXPForNextLevel,
   getCumulativeSkillVeterancyXP,
 } from '../utils/veterancy'
+import { SEEDS, getSeedById } from '../types/seeds'
+import { SEEDS } from '../types/seeds'
 
 interface GameState {
   authenticated: boolean
@@ -50,6 +53,10 @@ interface GameState {
   resourceVeterancies: ResourceVeterancy[]
   skillVeterancies: SkillVeterancy[]
   notifications: Notification[]
+  farmingPlots: FarmingPlot[]
+  purchaseFarmingPlot: () => void
+  plantSeed: (plotId: string, seedId: string) => void
+  harvestCrop: (plotId: string) => void
   combatSubStats: {
     strength: { level: number; experience: number; experienceToNext: number }
     attack: { level: number; experience: number; experienceToNext: number }
@@ -141,12 +148,40 @@ export const useGameStore = create<GameState>((set) => ({
   activeMedicaeResearchTasks: [],
   knowledgePoints: 0,
   unlockedMedicaeSkills: [],
-  planets: generateInitialPlanets(),
+  planets: (() => {
+    const planets = generateInitialPlanets()
+    // Add pre-discovered seed vendor planet with initial seeds
+    const starterSeeds = SEEDS.filter((seed) => seed.levelRequired <= 10) // First 10 levels
+    
+    const seedVendorPlanet: Planet = {
+      id: 'seed-vendor-agri-primus',
+      name: 'Agri-Primus Seed Market',
+      type: 'agri-world',
+      discovered: true,
+      contactCostGold: 0,
+      contactDuration: 0,
+      tradeItems: starterSeeds.map((seed) => ({
+        resourceId: seed.id,
+        resourceName: seed.name,
+        icon: seed.image || seed.icon || '',
+        buyPrice: seed.cost,
+        sellPrice: null,
+        availableQuantity: 0, // Unlimited
+        maxQuantity: 999999,
+      })),
+      rotationInterval: 3600000, // 1 hour
+      nextRotation: Date.now() + 3600000,
+      size: 'medium',
+      reputation: 100,
+    }
+    return [seedVendorPlanet, ...planets]
+  })(),
   activeContactTasks: [],
   village: initializeVillage(),
   resourceVeterancies: [],
   skillVeterancies: [],
   notifications: [],
+  farmingPlots: [],
   combatSubStats: {
     strength: { level: 1, experience: 0, experienceToNext: getExperienceForLevel(2) },
     attack: { level: 1, experience: 0, experienceToNext: getExperienceForLevel(2) },
@@ -1175,6 +1210,202 @@ export const useGameStore = create<GameState>((set) => ({
     }),
   setCombatActive: (active: boolean) => set({ combatActive: active }),
   setSelectedEnemy: (enemy: Enemy | null) => set({ selectedEnemy: enemy }),
+  purchaseFarmingPlot: () =>
+    set((state) => {
+      const plotCost = 100 * (state.farmingPlots.length + 1) // Increasing cost per plot
+      if (state.gold < plotCost) {
+        return {
+          ...state,
+          notifications: [
+            ...state.notifications,
+            {
+              id: `${Date.now()}-${Math.random()}`,
+              message: `Not enough gold! Need ${plotCost.toLocaleString()} gold.`,
+              timestamp: Date.now(),
+            },
+          ],
+        }
+      }
+      const newPlot: FarmingPlot = {
+        id: `plot-${Date.now()}-${Math.random()}`,
+        purchased: true,
+        plantedSeedId: null,
+        plantedAt: null,
+        readyAt: null,
+      }
+      return {
+        gold: state.gold - plotCost,
+        farmingPlots: [...state.farmingPlots, newPlot],
+        notifications: [
+          ...state.notifications,
+          {
+            id: `${Date.now()}-${Math.random()}`,
+            message: `Purchased farming plot for ${plotCost.toLocaleString()} gold!`,
+            timestamp: Date.now(),
+          },
+        ],
+      }
+    }),
+  plantSeed: (plotId: string, seedId: string) =>
+    set((state) => {
+      const plot = state.farmingPlots.find((p) => p.id === plotId)
+      if (!plot) return state
+      if (plot.plantedSeedId) {
+        return {
+          ...state,
+          notifications: [
+            ...state.notifications,
+            {
+              id: `${Date.now()}-${Math.random()}`,
+              message: 'This plot already has a crop planted!',
+              timestamp: Date.now(),
+            },
+          ],
+        }
+      }
+      
+      // Check if player has the seed in inventory
+      const seedCount = state.resources[seedId] || 0
+      if (seedCount < 1) {
+        return {
+          ...state,
+          notifications: [
+            ...state.notifications,
+            {
+              id: `${Date.now()}-${Math.random()}`,
+              message: `You don't have any ${seedId.replace('-seed', '')} seeds!`,
+              timestamp: Date.now(),
+            },
+          ],
+        }
+      }
+      
+      // Get seed data
+      const seed = getSeedById(seedId)
+      if (!seed) return state
+      
+      const now = Date.now()
+      const readyAt = now + seed.growTime * 1000
+      
+      const updatedPlots = state.farmingPlots.map((p) =>
+        p.id === plotId
+          ? {
+              ...p,
+              plantedSeedId: seedId,
+              plantedAt: now,
+              readyAt,
+            }
+          : p
+      )
+      
+      // Remove seed from inventory
+      const updatedResources = {
+        ...state.resources,
+        [seedId]: Math.max(0, seedCount - 1),
+      }
+      
+      return {
+        farmingPlots: updatedPlots,
+        resources: updatedResources,
+        notifications: [
+          ...state.notifications,
+          {
+            id: `${Date.now()}-${Math.random()}`,
+            message: `Planted ${seed.name}!`,
+            timestamp: Date.now(),
+          },
+        ],
+      }
+    }),
+  harvestCrop: (plotId: string) =>
+    set((state) => {
+      const plot = state.farmingPlots.find((p) => p.id === plotId)
+      if (!plot || !plot.plantedSeedId || !plot.readyAt) return state
+      
+      if (Date.now() < plot.readyAt) {
+        const remaining = Math.ceil((plot.readyAt - Date.now()) / 1000)
+        return {
+          ...state,
+          notifications: [
+            ...state.notifications,
+            {
+              id: `${Date.now()}-${Math.random()}`,
+              message: `Crop not ready yet! ${remaining}s remaining.`,
+              timestamp: Date.now(),
+            },
+          ],
+        }
+      }
+      
+      const seed = getSeedById(plot.plantedSeedId)
+      if (!seed) return state
+      
+      // Give rewards
+      const updatedResources = {
+        ...state.resources,
+        [seed.cropId]: (state.resources[seed.cropId] || 0) + seed.yield,
+      }
+      
+      // Update skill XP
+      const updatedCategories = state.skillCategories.map((cat) => ({
+        ...cat,
+        skills: cat.skills.map((skill) => {
+          if (skill.id === 'farming') {
+            const currentCumulativeXP = getCumulativeExperience(skill.level) + skill.experience
+            const newCumulativeXP = currentCumulativeXP + seed.xpReward
+            const progress = getExperienceProgress(newCumulativeXP)
+            return {
+              ...skill,
+              level: progress.level,
+              experience: progress.experience,
+              experienceToNext: progress.experienceToNext,
+            }
+          }
+          return skill
+        }),
+      }))
+      
+      // Update selectedSkill if it's farming
+      let updatedSelectedSkill = state.selectedSkill
+      if (updatedSelectedSkill?.id === 'farming') {
+        const category = updatedCategories.find((cat) =>
+          cat.skills.some((s) => s.id === 'farming')
+        )
+        if (category) {
+          const foundSkill = category.skills.find((s) => s.id === 'farming')
+          if (foundSkill) {
+            updatedSelectedSkill = foundSkill
+          }
+        }
+      }
+      
+      // Clear plot
+      const updatedPlots = state.farmingPlots.map((p) =>
+        p.id === plotId
+          ? {
+              ...p,
+              plantedSeedId: null,
+              plantedAt: null,
+              readyAt: null,
+            }
+          : p
+      )
+      
+      return {
+        farmingPlots: updatedPlots,
+        resources: updatedResources,
+        skillCategories: updatedCategories,
+        selectedSkill: updatedSelectedSkill || state.selectedSkill,
+        notifications: [
+          ...state.notifications,
+          {
+            id: `${Date.now()}-${Math.random()}`,
+            message: `${seed.name.replace(' Seeds', '')} +${seed.yield} (harvested)`,
+            timestamp: Date.now(),
+          },
+        ],
+      }
+    }),
   logout: () => {
     set({ authenticated: false, user: null, connected: false })
   },

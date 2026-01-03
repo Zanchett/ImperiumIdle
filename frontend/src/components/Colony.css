@@ -84,7 +84,7 @@
   gap: 0.5rem;
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.7);
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .limit-item span:last-child {
@@ -164,7 +164,7 @@
 .progress-text {
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.7);
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .colony-buildings-section,
@@ -272,7 +272,7 @@
 .building-time {
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.6);
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .building-level,
@@ -617,7 +617,7 @@
   border: 1px solid rgba(139, 0, 0, 0.3);
   border-radius: 3px;
   color: #ffb347;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
   font-size: 0.75rem;
   cursor: pointer;
 }

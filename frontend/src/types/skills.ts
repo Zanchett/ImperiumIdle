@@ -24,7 +24,7 @@ export interface SkillCategoryData {
 export const SKILL_CATEGORIES: SkillCategoryData[] = [
   {
     name: 'COMBAT PROTOCOLS',
-    icon: '⚔️',
+    icon: '',
     collapsed: true,
     skills: [
       {
@@ -75,7 +75,7 @@ export const SKILL_CATEGORIES: SkillCategoryData[] = [
   },
   {
     name: 'PASSIVE SYSTEMS',
-    icon: '⚙️',
+    icon: '',
     collapsed: true,
     skills: [
       {
@@ -126,7 +126,7 @@ export const SKILL_CATEGORIES: SkillCategoryData[] = [
   },
   {
     name: 'NON-COMBAT PROTOCOLS',
-    icon: '🔧',
+    icon: '',
     collapsed: false,
     skills: [
       {
@@ -163,15 +163,15 @@ export const SKILL_CATEGORIES: SkillCategoryData[] = [
         description: 'Heal wounds and maintain the health of your forces.',
       },
       {
-        id: 'tech-use',
-        name: 'Tech-Use',
+        id: 'farming',
+        name: 'Farming',
         category: 'NON-COMBAT PROTOCOLS',
-        icon: '💻',
+        icon: '🌾',
         level: 1,
         experience: 0,
         experienceToNext: getExperienceForLevel(2),
         mastery: 0,
-        description: 'Interact with and maintain advanced technology and machinery.',
+        description: 'Cultivate crops and manage agricultural plots to produce food resources.',
       },
       {
         id: 'research',

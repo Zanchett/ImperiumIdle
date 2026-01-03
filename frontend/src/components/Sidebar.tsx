@@ -1,5 +1,6 @@
 import { Skill, SkillCategoryData } from '../types/skills'
 import { useGameStore } from '../stores/gameStore'
+import { getSkillIconPath, hasSkillIcon } from '../utils/skillIcons'
 import './Sidebar.css'
 
 interface SidebarProps {
@@ -28,7 +29,6 @@ export default function Sidebar({
               className="category-header"
               onClick={() => onToggleCategory(category.name)}
             >
-              <span className="category-icon">{category.icon}</span>
               <span className="category-name">{category.name}</span>
               <span className="category-arrow">
                 {category.collapsed ? '▼' : '▲'}
@@ -53,21 +53,41 @@ export default function Sidebar({
                       >
                         <div className="skill-content-wrapper">
                           <div className="skill-name-row">
-                            <span className="skill-icon">{skill.icon}</span>
+                            {hasSkillIcon(skill.id) ? (
+                              <img 
+                                src={getSkillIconPath(skill.id)} 
+                                alt={skill.name}
+                                className="skill-icon"
+                              />
+                            ) : (
+                              <span className="skill-icon">{skill.icon}</span>
+                            )}
                             <span className="skill-name">{skill.name}</span>
                             <span className="skill-level">Lv.{skill.level}</span>
                           </div>
-                          <div className="skill-xp-info">
-                            <span className="xp-text">
-                              XP: {skill.experience.toLocaleString()} / {nextLevelXP.toLocaleString()} (Next: +{nextLevelXP})
-                            </span>
-                          </div>
-                          <div className="skill-xp-bar">
-                            <div
-                              className="skill-xp-progress"
-                              style={{ width: `${Math.min(xpPercent, 100)}%` }}
-                            ></div>
-                          </div>
+                          {isSelected && (
+                            <>
+                              <div className="skill-xp-info">
+                                <span className="xp-text">
+                                  XP: {skill.experience.toLocaleString()} / {nextLevelXP.toLocaleString()} (Next: +{nextLevelXP})
+                                </span>
+                              </div>
+                              <div className="skill-xp-bar">
+                                <div className="skill-xp-bar-tech-grid"></div>
+                                <div className="skill-xp-bar-tech-border"></div>
+                                <div
+                                  className="skill-xp-progress"
+                                  style={{ width: `${Math.min(xpPercent, 100)}%` }}
+                                >
+                                  <div className="skill-xp-bar-inner-glow"></div>
+                                  <div className="skill-xp-bar-edge-glow"></div>
+                                  <div className="skill-xp-bar-pulse"></div>
+                                </div>
+                                <div className="skill-xp-bar-corner-accent skill-xp-bar-corner-left"></div>
+                                <div className="skill-xp-bar-corner-accent skill-xp-bar-corner-right"></div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </button>
                       {showSubStats && (
@@ -87,10 +107,18 @@ export default function Sidebar({
                                     </span>
                                   </div>
                                   <div className="sub-stat-xp-bar">
+                                    <div className="sub-stat-xp-bar-tech-grid"></div>
+                                    <div className="sub-stat-xp-bar-tech-border"></div>
                                     <div
                                       className="sub-stat-xp-progress"
                                       style={{ width: `${Math.min((combatSubStats.strength.experience / combatSubStats.strength.experienceToNext) * 100, 100)}%` }}
-                                    ></div>
+                                    >
+                                      <div className="sub-stat-xp-bar-inner-glow"></div>
+                                      <div className="sub-stat-xp-bar-edge-glow"></div>
+                                      <div className="sub-stat-xp-bar-pulse"></div>
+                                    </div>
+                                    <div className="sub-stat-xp-bar-corner-accent sub-stat-xp-bar-corner-left"></div>
+                                    <div className="sub-stat-xp-bar-corner-accent sub-stat-xp-bar-corner-right"></div>
                                   </div>
                                 </div>
                               </li>
@@ -107,10 +135,18 @@ export default function Sidebar({
                                     </span>
                                   </div>
                                   <div className="sub-stat-xp-bar">
+                                    <div className="sub-stat-xp-bar-tech-grid"></div>
+                                    <div className="sub-stat-xp-bar-tech-border"></div>
                                     <div
                                       className="sub-stat-xp-progress"
                                       style={{ width: `${Math.min((combatSubStats.attack.experience / combatSubStats.attack.experienceToNext) * 100, 100)}%` }}
-                                    ></div>
+                                    >
+                                      <div className="sub-stat-xp-bar-inner-glow"></div>
+                                      <div className="sub-stat-xp-bar-edge-glow"></div>
+                                      <div className="sub-stat-xp-bar-pulse"></div>
+                                    </div>
+                                    <div className="sub-stat-xp-bar-corner-accent sub-stat-xp-bar-corner-left"></div>
+                                    <div className="sub-stat-xp-bar-corner-accent sub-stat-xp-bar-corner-right"></div>
                                   </div>
                                 </div>
                               </li>
@@ -127,10 +163,18 @@ export default function Sidebar({
                                     </span>
                                   </div>
                                   <div className="sub-stat-xp-bar">
+                                    <div className="sub-stat-xp-bar-tech-grid"></div>
+                                    <div className="sub-stat-xp-bar-tech-border"></div>
                                     <div
                                       className="sub-stat-xp-progress"
                                       style={{ width: `${Math.min((combatSubStats.defence.experience / combatSubStats.defence.experienceToNext) * 100, 100)}%` }}
-                                    ></div>
+                                    >
+                                      <div className="sub-stat-xp-bar-inner-glow"></div>
+                                      <div className="sub-stat-xp-bar-edge-glow"></div>
+                                      <div className="sub-stat-xp-bar-pulse"></div>
+                                    </div>
+                                    <div className="sub-stat-xp-bar-corner-accent sub-stat-xp-bar-corner-left"></div>
+                                    <div className="sub-stat-xp-bar-corner-accent sub-stat-xp-bar-corner-right"></div>
                                   </div>
                                 </div>
                               </li>
@@ -147,10 +191,18 @@ export default function Sidebar({
                                     </span>
                                   </div>
                                   <div className="sub-stat-xp-bar">
+                                    <div className="sub-stat-xp-bar-tech-grid"></div>
+                                    <div className="sub-stat-xp-bar-tech-border"></div>
                                     <div
                                       className="sub-stat-xp-progress"
                                       style={{ width: `${Math.min((combatSubStats.agility.experience / combatSubStats.agility.experienceToNext) * 100, 100)}%` }}
-                                    ></div>
+                                    >
+                                      <div className="sub-stat-xp-bar-inner-glow"></div>
+                                      <div className="sub-stat-xp-bar-edge-glow"></div>
+                                      <div className="sub-stat-xp-bar-pulse"></div>
+                                    </div>
+                                    <div className="sub-stat-xp-bar-corner-accent sub-stat-xp-bar-corner-left"></div>
+                                    <div className="sub-stat-xp-bar-corner-accent sub-stat-xp-bar-corner-right"></div>
                                   </div>
                                 </div>
                               </li>

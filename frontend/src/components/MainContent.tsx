@@ -15,8 +15,11 @@ import DungeonSelector from './DungeonSelector'
 import Communication from './Communication'
 import Commerce from './Commerce'
 import Colony from './Colony'
+import Farming from './Farming'
 import { Enemy } from '../types/enemies'
 import './MainContent.css'
+import { getSkillIconPath, hasSkillIcon } from '../utils/skillIcons'
+import { getVeterancyRankIconPath } from '../utils/veterancyIcons'
 
 interface MainContentProps {
   skill: Skill | null
@@ -90,6 +93,7 @@ export default function MainContent({ skill }: MainContentProps) {
   const isCommerce = skill?.id === 'commerce'
   const isColony = skill?.id === 'colony'
   const isMedicae = skill?.id === 'medicae'
+  const isFarming = skill?.id === 'farming'
 
   // Mapping of ingredient resourceIds to metal tab info
   const METAL_TAB_MAPPING: Record<string, { tabNum: string; tabName: string }> = {
@@ -397,6 +401,8 @@ export default function MainContent({ skill }: MainContentProps) {
       </>
     )
   }
+
+  // Note: Farming is handled below in the main return, not here
   
   const availableResources = isSalvaging
     ? SALVAGING_RESOURCES.filter((resource) => resource.levelRequired <= skill.level)
@@ -586,7 +592,12 @@ export default function MainContent({ skill }: MainContentProps) {
         {/* Topic Veterancy Bar - Compact design */}
         <div className="resource-veterancy">
           <div className="resource-veterancy-row">
-            <div className="resource-veterancy-icon">🏆</div>
+            <div className="resource-veterancy-icon">
+              <img 
+                src={getVeterancyRankIconPath(topicVeterancy?.level || 0)} 
+                alt={`Rank ${topicVeterancy?.level || 0}`}
+              />
+            </div>
             <div className="resource-veterancy-progress-wrapper">
               <div className="resource-veterancy-progress-bar">
                 <div
@@ -961,7 +972,12 @@ export default function MainContent({ skill }: MainContentProps) {
             <div className="recipe-card-footer-row">
               <div className="resource-veterancy">
                 <div className="resource-veterancy-row">
-                  <div className="resource-veterancy-icon">🏆</div>
+                  <div className="resource-veterancy-icon">
+                    <img 
+                      src={getVeterancyRankIconPath(recipeVeterancy?.level || 0)} 
+                      alt={`Rank ${recipeVeterancy?.level || 0}`}
+                    />
+                  </div>
                   <div className="resource-veterancy-progress-wrapper">
                     <div className="resource-veterancy-progress-bar">
                       <div
@@ -1063,7 +1079,12 @@ export default function MainContent({ skill }: MainContentProps) {
         {/* Recipe Veterancy Bar - Compact design */}
         <div className="resource-veterancy">
           <div className="resource-veterancy-row">
-            <div className="resource-veterancy-icon">🏆</div>
+            <div className="resource-veterancy-icon">
+              <img 
+                src={getVeterancyRankIconPath(recipeVeterancy?.level || 0)} 
+                alt={`Rank ${recipeVeterancy?.level || 0}`}
+              />
+            </div>
             <div className="resource-veterancy-progress-wrapper">
               <div className="resource-veterancy-progress-bar">
                 <div
@@ -1206,7 +1227,13 @@ export default function MainContent({ skill }: MainContentProps) {
               </div>
               {recipeVeterancy && (
                 <div className="recipe-detail-grant">
-                  <span className="grant-icon">🏆</span>
+                  <span className="grant-icon">
+                    <img 
+                      src={getVeterancyRankIconPath(recipeVeterancy.level)} 
+                      alt={`Rank ${recipeVeterancy.level}`}
+                      style={{ width: '1rem', height: '1rem', objectFit: 'contain' }}
+                    />
+                  </span>
                   <span className="grant-label">Veterancy:</span>
                   <span className="grant-value">V{recipeVeterancy.level}</span>
                 </div>
@@ -1314,7 +1341,12 @@ export default function MainContent({ skill }: MainContentProps) {
         {/* Resource Veterancy Bar - Compact design */}
         <div className="resource-veterancy">
           <div className="resource-veterancy-row">
-            <div className="resource-veterancy-icon">🏆</div>
+            <div className="resource-veterancy-icon">
+              <img 
+                src={getVeterancyRankIconPath(resourceVeterancy?.level || 0)} 
+                alt={`Rank ${resourceVeterancy?.level || 0}`}
+              />
+            </div>
             <div className="resource-veterancy-progress-wrapper">
               <div className="resource-veterancy-progress-bar">
                 <div
@@ -1354,7 +1386,15 @@ export default function MainContent({ skill }: MainContentProps) {
       <div className="main-content">
       <div className="skill-header">
         <div className="skill-header-top">
-          <span className="skill-header-icon">{skill.icon}</span>
+          {hasSkillIcon(skill.id) ? (
+            <img 
+              src={getSkillIconPath(skill.id)} 
+              alt={skill.name}
+              className="skill-header-icon"
+            />
+          ) : (
+            <span className="skill-header-icon">{skill.icon}</span>
+          )}
           <div className="skill-header-text">
             <div className="skill-title-row">
               <h1 className="skill-title">{skill.name}</h1>
@@ -1369,12 +1409,20 @@ export default function MainContent({ skill }: MainContentProps) {
                 {skill.experience.toLocaleString()} / {skill.experienceToNext.toLocaleString()}
               </span>
               <div className="skill-xp-bar-inline">
+                <div className="skill-xp-bar-tech-grid"></div>
+                <div className="skill-xp-bar-tech-border"></div>
                 <div
                   className="skill-xp-bar-fill"
                   style={{
                     width: `${Math.min(100, (skill.experience / skill.experienceToNext) * 100)}%`,
                   }}
-                ></div>
+                >
+                  <div className="skill-xp-bar-inner-glow"></div>
+                  <div className="skill-xp-bar-edge-glow"></div>
+                  <div className="skill-xp-bar-pulse"></div>
+                </div>
+                <div className="skill-xp-bar-corner-accent skill-xp-bar-corner-left"></div>
+                <div className="skill-xp-bar-corner-accent skill-xp-bar-corner-right"></div>
               </div>
             </div>
 
@@ -1389,7 +1437,12 @@ export default function MainContent({ skill }: MainContentProps) {
               
               return (
                 <div className="skill-veterancy-display">
-                  <span className="veterancy-icon-small">🏆</span>
+                  <span className="veterancy-icon-small">
+                    <img 
+                      src={getVeterancyRankIconPath(level)} 
+                      alt={`Rank ${level}`}
+                    />
+                  </span>
                   <span className="veterancy-label-inline">Veterancy:</span>
                   <button
                     className="veterancy-info-button"
@@ -1407,12 +1460,20 @@ export default function MainContent({ skill }: MainContentProps) {
                   </span>
                   <span className="veterancy-pool-inline">Pool: {pool.toLocaleString()}</span>
                   <div className="veterancy-bar-inline">
+                    <div className="veterancy-bar-tech-grid"></div>
+                    <div className="veterancy-bar-tech-border"></div>
                     <div
                       className="veterancy-bar-fill"
                       style={{
                         width: `${veterancyPercent}%`,
                       }}
-                    ></div>
+                    >
+                      <div className="veterancy-bar-inner-glow"></div>
+                      <div className="veterancy-bar-edge-glow"></div>
+                      <div className="veterancy-bar-pulse"></div>
+                    </div>
+                    <div className="veterancy-bar-corner-accent veterancy-bar-corner-left"></div>
+                    <div className="veterancy-bar-corner-accent veterancy-bar-corner-right"></div>
                   </div>
                 </div>
               )
@@ -1601,6 +1662,8 @@ export default function MainContent({ skill }: MainContentProps) {
               </>
             )}
           </>
+        ) : isFarming ? (
+          <Farming skillId={skill.id} />
         ) : (
           <section className="skill-section">
             <h2 className="section-title">AVAILABLE ACTIONS</h2>

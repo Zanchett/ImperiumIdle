@@ -39,7 +39,7 @@
   background: rgba(139, 0, 0, 0.2);
   border: 1px solid rgba(139, 0, 0, 0.4);
   border-radius: 4px;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .rotation-timer-label {
@@ -239,7 +239,7 @@
 
 .detail-label {
   color: rgba(255, 255, 255, 0.7);
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -276,7 +276,7 @@
   font-size: 0.75rem;
   margin: 0;
   text-align: center;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .contact-button {

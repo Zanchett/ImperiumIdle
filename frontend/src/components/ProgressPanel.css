@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
   box-shadow: inset 10px 0 20px rgba(139, 0, 0, 0.3);
   overflow-y: auto;
 }
@@ -125,7 +125,7 @@
   color: #cccccc;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
   font-size: 0.85rem;
   text-align: left;
 }

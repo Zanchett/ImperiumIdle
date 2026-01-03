@@ -1,6 +1,53 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../stores/gameStore'
+import { getItemData, getItemImage } from '../types/items'
+import { SALVAGING_RESOURCES } from '../types/salvagingResources'
+import { ENGINEERING_RECIPES } from '../types/engineeringResources'
+import { FOOD_RESOURCES } from '../types/foodResources'
+import { HERB_RESOURCES } from '../types/herbResources'
+import { MEDICAL_ITEMS } from '../types/medicalItems'
 import './NotificationToast.css'
+
+// Helper function to find resource ID from name
+function findResourceIdByName(name: string): string | null {
+  // Try all resource types
+  const allResources = [
+    ...SALVAGING_RESOURCES,
+    ...ENGINEERING_RECIPES,
+    ...FOOD_RESOURCES,
+    ...HERB_RESOURCES,
+    ...MEDICAL_ITEMS,
+  ]
+  
+  const resource = allResources.find((r) => r.name === name)
+  return resource?.id || null
+}
+
+// Helper function to extract resource name and icon from notification message
+function parseNotification(message: string): { resourceId: string | null; displayText: string } {
+  // Pattern: "Resource Name +X" or "Resource Name +X (extra text)"
+  const match = message.match(/^(.+?)\s+\+(\d+)(?:\s+\((.+)\))?$/)
+  if (match) {
+    const resourceName = match[1].trim()
+    const resourceId = findResourceIdByName(resourceName)
+    return { resourceId, displayText: message }
+  }
+  
+  // Pattern: "Bought Xx Resource Name" or "Sold Xx Resource Name"
+  const tradeMatch = message.match(/(?:Bought|Sold)\s+\d+x\s+(.+?)\s+(?:from|to)/)
+  if (tradeMatch) {
+    const resourceName = tradeMatch[1].trim()
+    const resourceId = findResourceIdByName(resourceName)
+    return { resourceId, displayText: message }
+  }
+  
+  // Pattern: "Knowledge +1 (Rarity Name)"
+  if (message.includes('Knowledge')) {
+    return { resourceId: null, displayText: message }
+  }
+  
+  return { resourceId: null, displayText: message }
+}
 
 export default function NotificationToast() {
   const { notifications, removeNotification } = useGameStore()
@@ -61,11 +108,26 @@ export default function NotificationToast() {
 
   return (
     <div className="notification-container">
-      {visibleNotifications.map((notification) => (
-        <div key={notification.id} className="notification-toast">
-          {notification.message}
-        </div>
-      ))}
+      {visibleNotifications.map((notification) => {
+        const { resourceId, displayText } = parseNotification(notification.message)
+        const resourceData = resourceId ? getItemData(resourceId) : null
+        const iconPath = resourceId ? getItemImage(resourceId) : null
+        
+        return (
+          <div key={notification.id} className="notification-toast">
+            {iconPath && (
+              <div className="notification-icon">
+                <img src={iconPath} alt={resourceData?.name || 'Resource'} />
+                <div className="notification-icon-glitch"></div>
+              </div>
+            )}
+            <span className="notification-text">
+              <span className="notification-text-content">{displayText}</span>
+              <span className="notification-text-glitch">{displayText}</span>
+            </span>
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -40,7 +40,9 @@ export default function Header({ gold, resources, playerName, onToggleSkillTree,
             onClick={() => setInventoryOpen(true)}
             title="Open Inventory"
           >
-            <span className="inventory-icon">📦</span>
+            <span className="inventory-icon">
+              <img src="/images/icons/inventory.png" alt="Inventory" />
+            </span>
             <span className="inventory-label">INVENTORY</span>
             {totalResources > 0 && (
               <span className="inventory-count">{totalResources}</span>
@@ -51,7 +53,9 @@ export default function Header({ gold, resources, playerName, onToggleSkillTree,
             onClick={onToggleSkillTree}
             title="Toggle Skill Tree"
           >
-            <span className="skill-tree-icon">🌳</span>
+            <span className="skill-tree-icon">
+              <img src="/images/icons/skill_tree.png" alt="Skill Tree" />
+            </span>
             <span className="skill-tree-label">SKILL TREE</span>
           </button>
         </div>

@@ -8,7 +8,7 @@
   min-height: 100vh;
   background: #000000;
   color: #cccccc;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
   position: relative;
   overflow: hidden;
 }
@@ -93,7 +93,7 @@
   color: #ff6b6b;
   font-size: 1.2rem;
   letter-spacing: 3px;
-  font-family: 'Courier New', monospace;
+  font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
 }
 
 .loading-icon {

@@ -7,6 +7,7 @@ import { SMELTING_RECIPES } from '../smeltingResources'
 import { FOOD_RESOURCES } from '../foodResources'
 import { HERB_RESOURCES } from '../herbResources'
 import { MEDICAL_ITEMS } from '../medicalItems'
+import { SEEDS } from '../seeds'
 
 // Placeholder image for items without images
 const PLACEHOLDER_IMAGE = '/images/resources/augment_equip.png'
@@ -142,6 +143,22 @@ export function getItemData(itemId: string): ItemData | null {
       image: PLACEHOLDER_IMAGE, // Medical items use placeholder
       value: medical.value,
       category: 'consumable',
+    }
+  }
+  
+  // Check seeds
+  const seed = SEEDS.find((s) => s.id === itemId)
+  if (seed) {
+    const foodResource = FOOD_RESOURCES.find((f) => f.id === seed.cropId)
+    return {
+      id: seed.id,
+      name: seed.name,
+      description: seed.description,
+      image: seed.image || foodResource?.image || PLACEHOLDER_IMAGE,
+      icon: seed.icon || foodResource?.icon,
+      value: seed.cost,
+      levelRequired: seed.levelRequired,
+      category: 'crafting-material',
     }
   }
   
